@@ -1,6 +1,6 @@
 # About
 
-This program helps to solve system of linear equations by different accurate methods
+This program helps to solve system of linear equations by different accurate methods. This project has given for me as course work (KPI, 1st course, 2nd term).
 
 # Main
 ## Method
@@ -11,9 +11,12 @@ This program helps to solve system of linear equations by different accurate met
 
 ## Features (not all are implemented yet)
 
-- The opportunity to try to solve any SLE
-- The opportunity to output the 2D graphical representation of two linear equations and their solve
+- the opportunity to try to solve any SLE
+- the opportunity to choose a solving method freely
 - The opportunity to output the solve of the manual typed or file inputed SLE
+- the opportunity to output the 2D graphical representation of two linear equations and their solve
+- the ability to warn an user about his/her incorrect behaviour with this software
+- the ability to warn an user about impossibility of solving sort of inputed issues which cannot be performed (cannot solve SLE, cannot output to file, etc)
 
 ## Requirements
 
