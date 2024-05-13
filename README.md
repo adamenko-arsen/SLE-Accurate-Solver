@@ -55,3 +55,28 @@ This program helps to solve system of linear equations by different accurate met
     <td colspan=2>Packages: <code>base</code>, <code>base-devel</code>, <code>gtkmm3</code>; others: any popular desktop environment, d-bus support</td>
   </tr>
 </table>
+
+## Building
+
+The project can be controlled broadly by the script `make.sh`.
+
+To build the project, run the command below:
+```sh
+$ make.sh build
+```
+
+Then you can execute by running the command below:
+```sh
+$ make.sh run
+```
+
+My personal C++ compiler:
+```sh
+$ g++ --version
+g++ (GCC) 14.1.1 20240507
+```
+
+The project C++ recommended version:
+```sh
+C++23
+```
