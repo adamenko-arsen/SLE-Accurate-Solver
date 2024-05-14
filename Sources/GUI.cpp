@@ -55,6 +55,11 @@ void LSEConfigurator::ResumeForm()
     set_sensitive(true);
 }
 
+double Logarithm(double powered, double base)
+{
+    return std::log(powered) / std::log(base);
+}
+
 LSESolveOutput::LSESolveOutput()
 {
     set_label("Виведення рішень СЛАР");
@@ -83,7 +88,7 @@ LSESolveOutput::LSESolveOutput()
         )
     );
 
-    outputGraph.set_size_request(300, 150);
+    outputGraph.set_size_request(300, 300);
     outputGraph.signal_draw().connect([this_ = this](const Cairo::RefPtr<Cairo::Context>& cr)
     {
         auto& outputGraph = this_->outputGraph;
@@ -124,6 +129,58 @@ LSESolveOutput::LSESolveOutput()
         double center_x = width / 2.0;
         double center_y = height / 2.0;
 
+        double maxSolvedVarValue = std::max(
+            std::fabs(X), std::fabs(Y)
+        );
+
+        double koeff = (std::min(width, height) / 2) / maxSolvedVarValue / 2;
+
+        // Draw major and minor lines:
+        double Cp = std::floor(Logarithm(maxSolvedVarValue, 10));
+        double Dp = std::floor(Logarithm(10 * maxSolvedVarValue, 10));
+
+        double C = std::pow(10, Cp);
+        double D = std::pow(10, Dp);
+
+        double MinStep = C * koeff;
+        double MajStep = D * koeff;
+
+        double MinXL = std::ceil((height / 2) / MinStep) * MinStep;
+        double MinYL = std::ceil((width / 2) / MinStep) * MinStep;
+
+        double MajXL = std::ceil((height / 2) / MajStep) * MajStep;
+        double MajYL = std::ceil((width / 2) / MajStep) * MajStep;
+
+        cr->set_source_rgb(0.25, 0.25, 0.25);
+        for (std::ptrdiff_t i = -MinXL; i <= MinXL; i++)
+        {
+            cr->move_to(width / 2 + MinStep * i, 0);
+            cr->line_to(width / 2 + MinStep * i, height);
+            cr->stroke();
+        }
+
+        for (std::ptrdiff_t i = -MinYL; i <= MinYL; i++)
+        {
+            cr->move_to(0,     height / 2 + MinStep * i);
+            cr->line_to(width, height / 2 + MinStep * i);
+            cr->stroke();
+        }
+
+        cr->set_source_rgb(0.6, 0.6, 0.6);
+        for (std::ptrdiff_t i = -MajXL; i <= MajXL; i++)
+        {
+            cr->move_to(width / 2 + MajStep * i, 0);
+            cr->line_to(width / 2 + MajStep * i, height);
+            cr->stroke();
+        }
+
+        for (std::ptrdiff_t i = -MajYL; i <= MajYL; i++)
+        {
+            cr->move_to(0,     height / 2 + MajStep * i);
+            cr->line_to(width, height / 2 + MajStep * i);
+            cr->stroke();
+        }
+
         // Draw X and Y axes
         cr->set_line_width(2.0);
         cr->set_source_rgb(0.0, 1.0, 0.0);
@@ -141,12 +198,6 @@ LSESolveOutput::LSESolveOutput()
         double m2 = -A2 / B2;
         double b2 = C2 / B2;
 
-        double max_value = std::max(
-            std::fabs(X), std::fabs(Y)
-        );
-
-        double koeff = std::min(width, height) / max_value / 5;
-
         // Draw the first line
         cr->set_source_rgb(1.0, 0.0, 0.0);
         cr->move_to(0,     center_y - (-center_x * m1 + b1 * koeff));
@@ -160,19 +211,24 @@ LSESolveOutput::LSESolveOutput()
         cr->stroke();
 
         // Draw X and Y axises text.
-        cr->set_font_size(18);
-        cr->move_to(center_x + 16, 18);
+        cr->set_font_size(12);
+        cr->move_to(center_x + 12 / 2 * 1.5, 12);
 
         cr->set_source_rgb(1, 1, 1);
         cr->show_text("Y");
 
-        cr->move_to(width - 18, center_y + 32);
+        cr->move_to(width - 12, center_y + 12 * 1.5);
         cr->show_text("X");
 
         // Draw coordinate
         cr->set_font_size(12);
         cr->move_to(center_x + X * koeff, center_y - Y * koeff);
         cr->show_text("(x=" + std::to_string(X) + " y=" + std::to_string(Y) + ")");
+
+        // Draw minor and major lines scale
+        cr->set_font_size(12);
+        cr->move_to(18, 18);
+        cr->show_text(std::format("Масштаб ліній відліку змінних: 10^{} = {}", Cp, std::pow(10, Cp)));
 
         return true;
     });
