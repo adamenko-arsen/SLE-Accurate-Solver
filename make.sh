@@ -25,6 +25,7 @@ build() {
 
         out="$OBJ/$(basename "${cpp%.cpp}.o")"
 
+        # if there is no such object file still, then do build the file in any way
         if [ -e "$out" ];
         then
             hpp="${cpp%.cpp}.hpp"
@@ -55,12 +56,15 @@ build() {
             fi
         fi
 
+        # the build command template for running
         cmd="\"$CPP\" -c $CPPLINK $CPPOPT $CPPFLAGS \"$cpp\" -o \"$out\" $CPPLIBS"
 
+        # output a build command and run it
         echo "$cmd"
         bash -c "$cmd"
     done
 
+    # output a build command and run it
     cmd="\"$LINK\" $LINKFLAGS $OBJ/*.o -o \"$EXE\" $CPPLIBS"
 
     echo "$cmd"
