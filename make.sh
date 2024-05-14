@@ -21,8 +21,6 @@ CPPLINTFLAGS='--std=c++23 --enable=style,warning,performance,portability,missing
 build() {
     find "$SRC" -type f -iname "*.cpp" | while read -r cpp;
     do
-        echo "$cpp"
-
         out="$OBJ/$(basename "${cpp%.cpp}.o")"
 
         # if there is no such object file still, then do build the file in any way
