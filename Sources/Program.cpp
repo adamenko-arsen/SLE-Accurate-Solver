@@ -30,16 +30,23 @@ int main(int argc, char *argv[])
     {
         if (strcmp(argv[i], "--cli") == 0)
         {
-            return CLIMain(argc, argv);
+            CLISession cliSession{};
+
+            return cliSession.Run(argc, argv);
         }
     }
 
-    ApplicationWindow appWin{};
+    // ApplicationWindow appWin{};
 
-    auto appData = std::make_shared<ApplicationData>();
+    // auto appData = std::make_shared<ApplicationData>();
 
-    appWin.SetApplicationData(appData);
-    appWin.ReadyWindow();
+    // appWin.SetApplicationData(appData);
+    // appWin.ReadyWindow();
 
-    return app->run(appWin);
+    // return app->run(appWin);
+
+    GUISession guiSession{};
+
+    guiSession.Init(argc, argv);
+    return app->run(guiSession.GetWindow());
 }

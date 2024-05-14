@@ -1,3 +1,7 @@
 #pragma once
 
-int CLIMain(int argc, char *argv[]);
+class CLISession
+{
+public:
+    int Run(int argc, char *argv[]);
+};

@@ -37,7 +37,7 @@ static std::string Input(const std::string& prompt = "")
     return inputBuffer;
 }
 
-int CLIMain(int argc, char *argv[])
+int CLISession::Run(int argc, char *argv[])
 {
     Print("Welcome to the LSE Solver's strict CLI mode!");
     Print("");

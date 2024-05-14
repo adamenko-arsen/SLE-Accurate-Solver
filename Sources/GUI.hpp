@@ -202,3 +202,15 @@ private:
     void initializeWindowHead();
     void initializeWidgets();
 };
+
+class GUISession
+{
+public:
+    void Init(int argc, char *argv[]);
+
+    Gtk::Window& GetWindow();
+
+private:
+    ApplicationWindow appWin{};
+    std::shared_ptr<ApplicationData> appData = std::make_shared<ApplicationData>();
+};

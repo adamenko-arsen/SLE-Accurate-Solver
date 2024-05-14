@@ -800,3 +800,14 @@ void LSESolverUI::onSolvingProcess()
 
     lseSolveOutput.lock()->OutputSolve();
 }
+
+void GUISession::Init(int argc, char *argv[])
+{
+    appWin.SetApplicationData(appData);
+    appWin.ReadyWindow();
+}
+
+Gtk::Window& GUISession::GetWindow()
+{
+    return appWin;
+}
