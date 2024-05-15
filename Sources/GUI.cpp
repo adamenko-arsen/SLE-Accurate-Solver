@@ -45,16 +45,6 @@ void LSEConfigurator::SetLSEInputData(std::weak_ptr<LSEInputData> lseInputData)
     this->lseData = lseInputData;
 }
 
-void LSEConfigurator::FrozeForm()
-{
-    set_sensitive(false);
-}
-
-void LSEConfigurator::ResumeForm()
-{
-    set_sensitive(true);
-}
-
 double Logarithm(double powered, double base)
 {
     return std::log(powered) / std::log(base);
@@ -800,6 +790,8 @@ void LSESolverUI::onSolvingProcess()
 
     lseSolveOutput.lock()->OutputSolve();
 }
+
+GUISession::GUISession() = default;
 
 void GUISession::Init(int argc, char *argv[])
 {

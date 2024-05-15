@@ -1,6 +1,6 @@
 #pragma once
 
-#include "LSESolver.hpp"
+#include "../LSESolver.hpp"
 
 struct LDLDecResult
 {

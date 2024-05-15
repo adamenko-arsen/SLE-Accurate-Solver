@@ -1,8 +1,8 @@
 #include "LSESolversData.hpp"
 
-#include "LUPSolver.hpp"
-#include "GaussHoletskiySolver.hpp"
-#include "RotationSolver.hpp"
+#include "LSESolvers/LUPSolver.hpp"
+#include "LSESolvers/GaussHoletskiySolver.hpp"
+#include "LSESolvers/RotationSolver.hpp"
 
 std::unique_ptr<LSESolver> LSESolverFactoryProduce(LSESolvingMethodIndex solverIndex)
 {

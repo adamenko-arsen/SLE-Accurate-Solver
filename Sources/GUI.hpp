@@ -62,9 +62,6 @@ public:
 
     void SetLSEInputData(std::weak_ptr<LSEInputData> lseInputData);
 
-    void FrozeForm();
-    void ResumeForm();
-
 private:
     Gtk::Box boxLayout{};
 
@@ -206,6 +203,8 @@ private:
 class GUISession
 {
 public:
+    GUISession();
+
     void Init(int argc, char *argv[]);
 
     Gtk::Window& GetWindow();

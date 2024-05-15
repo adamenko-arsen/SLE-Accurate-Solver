@@ -1,6 +1,6 @@
 #include "RotationSolver.hpp"
 
-#include "AllocArray2D.inc.hpp"
+#include "../AllocArray2D.inc.hpp"
 
 #include <cmath>
 

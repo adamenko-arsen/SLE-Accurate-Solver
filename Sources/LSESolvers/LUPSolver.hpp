@@ -2,7 +2,7 @@
 
 #include <cstdint>
 
-#include "LSESolver.hpp"
+#include "../LSESolver.hpp"
 
 struct LUPDecResult
 {
