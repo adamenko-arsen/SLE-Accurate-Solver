@@ -232,5 +232,5 @@ SolvingResult LUPSolver::SolveLSEInternal(Matrix&& A, Vector&& B)
 
     auto X = solveX(lup.U, mayY.value(), itersCounter);
 
-    return SolvingResult::Successful(std::move(X)).SetItersCount(itersCounter.GetTotalCount());
+    return SolvingResult::Successful(std::move(X)).SetItersCountChainly(itersCounter.GetTotalCount());
 }

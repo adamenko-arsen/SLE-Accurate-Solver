@@ -12,25 +12,87 @@
 
 #define CLASS_CONST static constexpr
 
-struct LSEInputData
+class LSEInputData
 {
-    std::size_t EqsCount = 0;
+public:
+    LSEInputData();
+
+    void ClearData();
+
+    void SetEquationsCount(std::size_t eqsCount);
+    std::optional<std::size_t> GetEquationsCount() const noexcept;
+    bool IsEquationsCountSetted() const noexcept;
+
+    void SetVariablesCoefficients(auto&& a)
+    {
+        if (! isEqsCountSetted)
+        {
+            return;
+        }
+        if (! (a.TryGetEdgeSize() == eqsCount))
+        {
+            return;
+        }
+
+        A = a;
+    }
+    void SetFreeCoefficients(auto&& b)
+    {
+        if (! isEqsCountSetted)
+        {
+            return;
+        }
+        if (! (b.Size() == eqsCount))
+        {
+            return;
+        }
+
+        B = std::forward<decltype(b)>(b);
+    }
+
+    std::optional<std::reference_wrapper<Matrix>> GetVariablesCoefficientsRef();
+    std::optional<std::reference_wrapper<const Matrix>> GetVariablesCoefficientsRef() const;
+
+    std::optional<std::reference_wrapper<Vector>> GetFreeCoefficientsRef();
+    std::optional<std::reference_wrapper<const Vector>> GetFreeCoefficientsRef() const;
+
+    void ConfirmData();
+    bool IsDataConfirmed() const noexcept;
+
+private:
+    std::size_t eqsCount = 0;
+
     Matrix A{};
     Vector B{};
 
-    bool IsSetted = false;
+    bool isConfirmed = false;
+
+    bool isEqsCountSetted = false;
 };
 
 enum class LSESolvingStatus : uint8_t
 {
-    Unsolved, SolvedSuccessfuly, SolvedFailful
+    Unsolved, SolvedSuccessfully, SolvedFailful
 };
 
-struct LSESolveData
+class LSESolveData
 {
-    Vector X{};
+public:
+    LSESolveData();
 
-    LSESolvingStatus SolvingStatus = LSESolvingStatus::Unsolved;
+    void SetVarsSolve(auto&& x)
+    {
+        X = std::forward<decltype(x)>(x);
+    }
+    std::optional<std::reference_wrapper<Vector>> GetSolveRef();
+    std::optional<std::reference_wrapper<const Vector>> GetSolveRef() const;
+
+    void SetSolvingStatus(LSESolvingStatus lseSolvingStatus);
+    LSESolvingStatus GetSolvingStatus() const noexcept;
+
+private:
+    Vector X{};
+    LSESolvingStatus solvingStatus = LSESolvingStatus::Unsolved;
 };
 
 class ApplicationData
@@ -205,9 +267,8 @@ class GUISession
 public:
     GUISession();
 
-    void Init(int argc, char *argv[]);
-
-    Gtk::Window& GetWindow();
+    void Init();
+    Gtk::Window& GetWindowRef();
 
 private:
     ApplicationWindow appWin{};

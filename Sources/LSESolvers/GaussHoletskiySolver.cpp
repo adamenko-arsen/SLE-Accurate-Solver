@@ -210,5 +210,5 @@ SolvingResult GaussHoletskiySolver::SolveLSEInternal(Matrix&& A, Vector&& B)
         return SolvingResult::Error();
     }
 
-    return SolvingResult::Successful(X).SetItersCount(itersCounter.GetTotalCount());
+    return SolvingResult::Successful(X).SetItersCountChainly(itersCounter.GetTotalCount());
 }

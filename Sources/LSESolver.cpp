@@ -21,14 +21,23 @@ SolvingResult SolvingResult::Error()
 {
     SolvingResult solvingResult;
 
-    solvingResult.IsSuccessful = false;
+    solvingResult.isSuccessful = false;
 
     return solvingResult;
 }
 
-SolvingResult& SolvingResult::SetItersCount(std::size_t itersCount)
+bool SolvingResult::GetSuccessfulness() const
 {
-    ItersCount = itersCount;
+    return isSuccessful;
+}
+Vector& SolvingResult::GetVarsValuesRef()
+{
+    return varsValues;
+}
+
+SolvingResult& SolvingResult::SetItersCountChainly(std::size_t itersCount)
+{
+    itersCount = itersCount;
 
     return *this;
 }
@@ -58,38 +67,6 @@ BaseStatus LSESolver::SetEquationsCount(std::size_t equationsCount)
     return Success;
 }
 
-BaseStatus LSESolver::SetVariablesCoefficients(const Matrix& varsCoeffsMatrix)
-{
-    using enum BaseStatus;
-
-    if (! varsCoeffsMatrix.IsSquare())
-    {
-        return Error;
-    }
-    if (! (varsCoeffsMatrix.TryGetEdgeSize() == equationsCount))
-    {
-        return Error;
-    }
-
-    this->varsCoeffsMatrix = varsCoeffsMatrix;
-
-    return Success;
-}
-
-BaseStatus LSESolver::SetFreeCoefficients(const Vector& freeCoeffsVector)
-{
-    using enum BaseStatus;
-
-    if (! (freeCoeffsVector.Size() == equationsCount))
-    {
-        return Error;
-    }
-
-    this->freeCoeffsVector = freeCoeffsVector;
-
-    return Success;
-}
-
 void LSESolver::SolveLSE()
 {
     if (isSolvingApplied)
@@ -102,12 +79,12 @@ void LSESolver::SolveLSE()
     );
 
     isSolvingApplied = true;
-    isLSESoledSuccessfully = solvingResult.IsSuccessful;
+    isLSESoledSuccessfully = solvingResult.GetSuccessfulness();
 
     if (isLSESoledSuccessfully)
     {
-        variablesValues = std::move(solvingResult.VarsValues);
-        totalIterationsCount = solvingResult.ItersCount;
+        variablesValues = std::move(solvingResult.GetVarsValuesRef());
+        totalIterationsCount = solvingResult.GetItersCount();
     }
 }
 

@@ -1,7 +1,6 @@
 #include <gtkmm.h>
 
 #include "GUI.hpp"
-#include "CLI.hpp"
 #include "Convert.hpp"
 
 #include <cmath>
@@ -26,27 +25,8 @@ int main(int argc, char *argv[])
 {
     auto app = Gtk::Application::create(argc, argv, "ua.kpi.ip-35.course1-term2.lse-solver");
 
-    for (int i = 1; i < argc; i++)
-    {
-        if (strcmp(argv[i], "--cli") == 0)
-        {
-            CLISession cliSession{};
-
-            return cliSession.Run(argc, argv);
-        }
-    }
-
-    // ApplicationWindow appWin{};
-
-    // auto appData = std::make_shared<ApplicationData>();
-
-    // appWin.SetApplicationData(appData);
-    // appWin.ReadyWindow();
-
-    // return app->run(appWin);
-
     GUISession guiSession{};
 
-    guiSession.Init(argc, argv);
-    return app->run(guiSession.GetWindow());
+    guiSession.Init();
+    return app->run(guiSession.GetWindowRef());
 }

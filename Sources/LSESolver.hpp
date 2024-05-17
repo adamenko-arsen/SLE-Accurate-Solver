@@ -20,8 +20,9 @@ private:
     std::size_t itersCount = 0;
 };
 
-struct SolvingResult
+class SolvingResult
 {
+public:
     SolvingResult();
 
     static SolvingResult Error();
@@ -29,19 +30,26 @@ struct SolvingResult
     {
         SolvingResult solvingResult;
 
-        solvingResult.IsSuccessful = true;
-        solvingResult.VarsValues =
+        solvingResult.isSuccessful = true;
+        solvingResult.varsValues =
             std::forward<decltype(varsValues)>(varsValues);
 
         return solvingResult;
     }
+    bool GetSuccessfulness() const;
+    Vector& GetVarsValuesRef();
+    std::size_t GetItersCount() const
+    {
+        return itersCount;
+    }
 
-    SolvingResult& SetItersCount(std::size_t itersCount);
+    SolvingResult& SetItersCountChainly(std::size_t itersCount);
 
-    bool IsSuccessful = false;
-    Vector VarsValues{};
+private:
+    bool isSuccessful = false;
+    Vector varsValues{};
 
-    std::size_t ItersCount = 0;
+    std::size_t itersCount = 0;
 };
 
 enum class BaseStatus : bool
@@ -56,8 +64,37 @@ public:
     virtual ~LSESolver();
 
     BaseStatus SetEquationsCount(std::size_t equationsCount);
-    BaseStatus SetVariablesCoefficients(const Matrix& varsCoeffsMatrix);
-    BaseStatus SetFreeCoefficients(const Vector& freeCoeffsVector);
+    BaseStatus SetVariablesCoefficients(auto&& varsCoeffsMatrix)
+    {
+        using enum BaseStatus;
+
+        if (! varsCoeffsMatrix.IsSquare())
+        {
+            return Error;
+        }
+        if (! (varsCoeffsMatrix.TryGetEdgeSize() == equationsCount))
+        {
+            return Error;
+        }
+
+        this->varsCoeffsMatrix = std::forward<decltype(varsCoeffsMatrix)>(varsCoeffsMatrix);
+
+        return Success;
+    }
+
+    BaseStatus SetFreeCoefficients(auto&& freeCoeffsVector)
+    {
+        using enum BaseStatus;
+
+        if (! (freeCoeffsVector.Size() == equationsCount))
+        {
+            return Error;
+        }
+
+        this->freeCoeffsVector = std::forward<decltype(freeCoeffsVector)>(freeCoeffsVector);
+
+        return Success;
+    }
 
     void SolveLSE();
 

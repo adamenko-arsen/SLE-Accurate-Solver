@@ -32,7 +32,7 @@ std::string GetCurrentFormalTime()
     );
 }
 
-double PutInRange(double value, double from, double to)
+double PutNumberToBounds(double value, double from, double to)
 {
     if (! (from <= value))
     {
@@ -45,14 +45,128 @@ double PutInRange(double value, double from, double to)
     return value;
 }
 
-void LSEConfigurator::SetLSEInputData(std::weak_ptr<LSEInputData> lseInputData)
-{
-    this->lseData = lseInputData;
-}
-
 double Logarithm(double poweredValue, double base)
 {
     return std::log(poweredValue) / std::log(base);
+}
+
+// class LSEInputData
+
+LSEInputData::LSEInputData() = default;
+
+void LSEInputData::ClearData()
+{
+    A = Matrix();
+    B = Vector();
+
+    isEqsCountSetted = false;
+    isConfirmed = false;
+}
+void LSEInputData::SetEquationsCount(std::size_t eqsCount)
+{
+    if (isEqsCountSetted)
+    {
+        return;
+    }
+
+    this->eqsCount = eqsCount;
+
+    isEqsCountSetted = true;
+}
+std::optional<std::size_t> LSEInputData::GetEquationsCount() const noexcept
+{
+    if (! isEqsCountSetted)
+    {
+        return std::nullopt;
+    }
+    return eqsCount;
+}
+bool LSEInputData::IsEquationsCountSetted() const noexcept
+{
+    return isEqsCountSetted;
+}
+
+std::optional<std::reference_wrapper<Matrix>> LSEInputData::GetVariablesCoefficientsRef()
+{
+    if (! isEqsCountSetted)
+    {
+        return std::nullopt;
+    }
+    return A;
+}
+std::optional<std::reference_wrapper<const Matrix>> LSEInputData::GetVariablesCoefficientsRef() const
+{
+    if (! isEqsCountSetted)
+    {
+        return std::nullopt;
+    }
+    return A;
+}
+
+std::optional<std::reference_wrapper<Vector>> LSEInputData::GetFreeCoefficientsRef()
+{
+    if (! isEqsCountSetted)
+    {
+        return std::nullopt;
+    }
+    return B;
+}
+std::optional<std::reference_wrapper<const Vector>> LSEInputData::GetFreeCoefficientsRef() const
+{
+    if (! isEqsCountSetted)
+    {
+        return std::nullopt;
+    }
+    return B;
+}
+
+void LSEInputData::ConfirmData()
+{
+    isConfirmed = true;
+}
+bool LSEInputData::IsDataConfirmed() const noexcept
+{
+    return isConfirmed;
+}
+
+// class LSESolveData
+
+LSESolveData::LSESolveData() = default;
+
+void LSESolveData::SetSolvingStatus(LSESolvingStatus lseSolvingStatus)
+{
+    solvingStatus = lseSolvingStatus;
+}
+
+std::optional<std::reference_wrapper<Vector>> LSESolveData::GetSolveRef()
+{
+    if (! (solvingStatus == LSESolvingStatus::SolvedSuccessfully))
+    {
+        return std::nullopt;
+    }
+
+    return X;
+}
+std::optional<std::reference_wrapper<const Vector>> LSESolveData::GetSolveRef() const
+{
+    if (! (solvingStatus == LSESolvingStatus::SolvedSuccessfully))
+    {
+        return std::nullopt;
+    }
+
+    return X;
+}
+
+LSESolvingStatus LSESolveData::GetSolvingStatus() const noexcept
+{
+    return solvingStatus;
+}
+
+// class LSEConfigurator
+
+void LSEConfigurator::SetLSEInputData(std::weak_ptr<LSEInputData> lseInputData)
+{
+    this->lseData = lseInputData;
 }
 
 LSESolveOutput::LSESolveOutput()
@@ -104,51 +218,54 @@ LSESolveOutput::LSESolveOutput()
                 return true;
             }
 
-            auto& lseInputData = *this_->lseInputData.lock();
-            auto& lseSolveData = *this_->lseSolveData.lock();
+            const auto& lseInputData = *this_->lseInputData.lock();
+            const auto& lseSolveData = *this_->lseSolveData.lock();
 
-            auto coeffA1 = PutInRange(lseInputData.A.At(0, 0), 0.01, 100);
-            auto coeffB1 = PutInRange(lseInputData.A.At(0, 1), 0.01, 100);
-            auto coeffC1 = lseInputData.B[0];
+            const auto A = lseInputData.GetVariablesCoefficientsRef().value().get();
+            const auto B = lseInputData.GetFreeCoefficientsRef().value().get();
 
-            auto coeffA2 = PutInRange(lseInputData.A.At(1, 0), 0.01, 100);
-            auto coeffB2 = PutInRange(lseInputData.A.At(1, 1), 0.01, 100);
-            auto coeffC2 = lseInputData.B[1];
+            const auto coeffA1 = PutNumberToBounds(A.At(0, 0), 0.01, 100);
+            const auto coeffB1 = PutNumberToBounds(A.At(0, 1), 0.01, 100);
+            const auto coeffC1 = B[0];
 
-            const auto& solves = lseSolveData.X;
+            const auto coeffA2 = PutNumberToBounds(A.At(1, 0), 0.01, 100);
+            const auto coeffB2 = PutNumberToBounds(A.At(1, 1), 0.01, 100);
+            const auto coeffC2 = B[1];
 
-            auto solveX = solves[0];
-            auto solveY = solves[1];
+            const auto solves = lseSolveData.GetSolveRef().value().get();
 
-            if (! (lseInputData.EqsCount == 2))
+            const auto solveX = solves[0];
+            const auto solveY = solves[1];
+
+            if (! (lseInputData.GetEquationsCount().value() == 2))
             {
                 return true;
             }
 
-            double centerX = width / 2.0;
-            double centerY = height / 2.0;
+            const double centerX = width / 2.0;
+            const double centerY = height / 2.0;
 
-            double maxSolvedVarValue = std::max(
+            const double maxSolvedVarValue = std::max(
                 std::fabs(solveX), std::fabs(solveY)
             );
 
-            double pixelsToValueScale = (std::min(width, height) / 2) / maxSolvedVarValue / 2;
+            const double pixelsToValueScale = (std::min(width, height) / 2) / maxSolvedVarValue / 2;
 
             // Draw major and minor lines:
-            double minorLinesPower = std::floor(Logarithm(maxSolvedVarValue, 10));
-            double majorLinesPower = std::floor(Logarithm(10 * maxSolvedVarValue, 10));
+            const double minorLinesPower = std::floor(Logarithm(maxSolvedVarValue, 10));
+            const double majorLinesPower = std::floor(Logarithm(10 * maxSolvedVarValue, 10));
 
-            double minorLinesValueStep = std::pow(10, minorLinesPower);
-            double majorLinesValueStep = std::pow(10, majorLinesPower);
+            const double minorLinesValueStep = std::pow(10, minorLinesPower);
+            const double majorLinesValueStep = std::pow(10, majorLinesPower);
 
-            double minorLinesPixelsStep = minorLinesValueStep * pixelsToValueScale;
-            double majorLinesPixelsStep = majorLinesValueStep * pixelsToValueScale;
+            const double minorLinesPixelsStep = minorLinesValueStep * pixelsToValueScale;
+            const double majorLinesPixelsStep = majorLinesValueStep * pixelsToValueScale;
 
-            double minorLinesCountByX = std::ceil((width / 2) / minorLinesPixelsStep) * minorLinesPixelsStep;
-            double minorLinesCountByY = std::ceil((height / 2) / minorLinesPixelsStep) * minorLinesPixelsStep;
+            const double minorLinesCountByX = std::ceil((width / 2) / minorLinesPixelsStep) * minorLinesPixelsStep;
+            const double minorLinesCountByY = std::ceil((height / 2) / minorLinesPixelsStep) * minorLinesPixelsStep;
 
-            double majorLinesCountByX = std::ceil((width / 2) / majorLinesPixelsStep) * majorLinesPixelsStep;
-            double majorLinesCountByY = std::ceil((height / 2) / majorLinesPixelsStep) * majorLinesPixelsStep;
+            const double majorLinesCountByX = std::ceil((width / 2) / majorLinesPixelsStep) * majorLinesPixelsStep;
+            const double majorLinesCountByY = std::ceil((height / 2) / majorLinesPixelsStep) * majorLinesPixelsStep;
 
             canvas->set_source_rgb(0.25, 0.25, 0.25);
             for (std::ptrdiff_t i = -minorLinesCountByX; i <= minorLinesCountByX; i++)
@@ -191,11 +308,11 @@ LSESolveOutput::LSESolveOutput()
             canvas->line_to(centerX, height);
             canvas->stroke();
 
-            double coeffK1 = -coeffA1 / coeffB1;
-            double coeffBase1 = coeffC1 / coeffB1;
+            const double coeffK1 = -coeffA1 / coeffB1;
+            const double coeffBase1 = coeffC1 / coeffB1;
 
-            double coeffK2 = -coeffA2 / coeffB2;
-            double coeffBase2 = coeffC2 / coeffB2;
+            const double coeffK2 = -coeffA2 / coeffB2;
+            const double coeffBase2 = coeffC2 / coeffB2;
 
             // Draw the first line
             canvas->set_source_rgb(1.0, 0.0, 0.0);
@@ -243,8 +360,7 @@ void LSESolveOutput::OutputSolve()
 
     std::string varsValuesStr{};
 
-    auto& lseSolveDataV = *lseSolveData.lock();
-    const auto& solves = lseSolveDataV.X;
+    const auto& solves = (*lseSolveData.lock()).GetSolveRef().value().get();
 
     for (std::size_t solveIndex = 0; solveIndex < solves.Size(); solveIndex++)
     {
@@ -274,14 +390,14 @@ void LSESolveOutput::saveSolve()
 {
     auto& lseSolveDataV = *lseSolveData.lock();
 
-    if (lseSolveDataV.SolvingStatus != LSESolvingStatus::SolvedSuccessfuly)
+    if (lseSolveDataV.GetSolvingStatus() != LSESolvingStatus::SolvedSuccessfully)
     {
         return;
     }
 
     std::string formattedSolves = "";
 
-    auto& solves = lseSolveDataV.X;
+    const auto& solves = lseSolveDataV.GetSolveRef().value().get();
 
     for (std::size_t solveIndex = 0; solveIndex < solves.Size(); solveIndex++)
     {
@@ -473,8 +589,17 @@ std::string GetCoeffBFancyLabel(double eqIndex)
 
 void LSEConfigurator::setEqsAsInput()
 {
-    auto lseInputData = lseData.lock();
-    auto eqsCount = lseInputData->EqsCount;
+    auto& lseDataV = *lseData.lock();
+
+    if (! lseDataV.IsEquationsCountSetted())
+    {
+        return;
+    }
+
+    auto eqsCount = lseDataV.GetEquationsCount().value();
+
+    auto& A = lseDataV.GetVariablesCoefficientsRef().value().get();
+    auto& B = lseDataV.GetFreeCoefficientsRef().value().get();
 
     for (std::size_t cellY = 0; cellY < eqsCount; cellY++)
     {
@@ -500,7 +625,7 @@ void LSEConfigurator::setEqsAsInput()
                 return;
             }
 
-            lseInputData->A.At(cellY, cellX) = coeffA;
+            A.At(cellY, cellX) = coeffA;
         }
 
         auto mayCoeffB = ToNumber(freeCoeffsEntries[cellY].get_text());
@@ -523,14 +648,14 @@ void LSEConfigurator::setEqsAsInput()
             return;
         }
 
-        lseInputData->B[cellY] = coeffB;
+        B[cellY] = coeffB;
     }
 
     eqsConfStatus.set_text(
         std::format("Дана СЛАР встановлена {}", GetCurrentFormalTime())
     );
 
-    lseInputData->IsSetted = true;
+    lseDataV.ConfirmData();
 }
 
 void LSEConfigurator::initializeEqsForm()
@@ -575,6 +700,13 @@ void LSEConfigurator::createEqsForm(std::size_t eqsCount)
     varsCoeffsEntries = AllocArray2D<Gtk::Entry>(eqsCount, eqsCount);
     freeCoeffsEntries = std::vector<Gtk::Entry>(eqsCount);
 
+    auto& lseDataV = *lseData.lock();
+
+    lseDataV.SetEquationsCount(eqsCount);
+
+    lseDataV.SetVariablesCoefficients(Matrix(eqsCount, eqsCount));
+    lseDataV.SetFreeCoefficients(Vector(eqsCount));
+
     for (std::size_t y = 0; y < eqsCount; y++)
     {
         for (std::size_t x = 0; x < eqsCount; x++)
@@ -609,13 +741,6 @@ void LSEConfigurator::createEqsForm(std::size_t eqsCount)
         freeCoeffsGrid.attach(newFreeCoeff, 0, y);
     }
 
-    auto lseDataP = lseData.lock();
-
-    lseDataP->EqsCount = eqsCount;
-    lseDataP->A = Matrix(eqsCount, eqsCount);
-    lseDataP->B = Vector(eqsCount);
-    lseDataP->IsSetted = false;
-
     varsCoeffsGrid.show_all_children();
     freeCoeffsGrid.show_all_children();
 
@@ -625,7 +750,15 @@ void LSEConfigurator::createEqsForm(std::size_t eqsCount)
 
 void LSEConfigurator::removeEqsForm()
 {
-    std::size_t eqsCount = lseData.lock()->EqsCount;
+    auto& lseDataV = *lseData.lock();
+
+    if (! lseDataV.IsEquationsCountSetted())
+    {
+        return;
+    }
+
+    std::size_t eqsCount = lseDataV.GetEquationsCount().value();
+    lseDataV.ClearData();
 
     varsCoeffsGrid.hide();
     freeCoeffsGrid.hide();
@@ -638,27 +771,26 @@ void LSEConfigurator::removeEqsForm()
         freeCoeffsGrid.remove_column(0);
     }
 
-    auto lseDataP = lseData.lock();
-
-    lseDataP->EqsCount = 0;
-    lseDataP->A = Matrix();
-    lseDataP->B = Vector();
-    lseDataP->IsSetted = false;
-
     varsCoeffsEntries = AllocArray2D<Gtk::Entry>();
     freeCoeffsEntries = std::vector<Gtk::Entry>();
 }
 
 void LSEConfigurator::fillEmptyEntriesWithZeroes()
 {
-    auto eqsCount = lseData.lock()->EqsCount;
+    const auto& lseDataV = *lseData.lock();
+
+    if (! lseDataV.IsEquationsCountSetted())
+    {
+        return;
+    }
+
+    auto eqsCount = lseDataV.GetEquationsCount().value();
 
     for (std::size_t y = 0; y < eqsCount; y++)
     {
         for (std::size_t x = 0; x < eqsCount; x++)
         {
             auto& currentEntryOfMatrixA = varsCoeffsEntries.At(y, x);
-            
             const auto& origEntryInput = currentEntryOfMatrixA.get_text();
 
             if (origEntryInput == "")
@@ -668,7 +800,6 @@ void LSEConfigurator::fillEmptyEntriesWithZeroes()
         }
 
         auto& currentEntryOfVectorB = freeCoeffsEntries[y];
-
         const auto& origEntryInput = currentEntryOfVectorB.get_text();
 
         if (origEntryInput == "")
@@ -716,29 +847,6 @@ LSESolverUI::LSESolverUI()
     solverRootBox.show();
 }
 
-class TimeDifferenceRuler
-{
-public:
-    TimeDifferenceRuler() = default;
-
-    void SetBeginTimePoint()
-    {
-        beginTimePoint = std::chrono::high_resolution_clock::now();
-    }
-    void SetEndTimePoint()
-    {
-        endTimePoint = std::chrono::high_resolution_clock::now();
-    }
-    double GetTimeDifference()
-    {
-        return std::chrono::duration_cast<std::chrono::duration<double>>(endTimePoint - beginTimePoint).count();
-    }
-
-private:
-    std::chrono::time_point<std::chrono::high_resolution_clock> beginTimePoint{};
-    std::chrono::time_point<std::chrono::high_resolution_clock> endTimePoint{};
-};
-
 void LSESolverUI::onSolvingProcess()
 {
     auto comboBoxMethodIndex = comboBoxMethodsNames.get_active_id();
@@ -749,17 +857,18 @@ void LSESolverUI::onSolvingProcess()
         return;
     }
 
-    auto lseInput = lseInputData.lock();
+    auto lseInput = *lseInputData.lock();
 
-    if (! lseInput->IsSetted)
+    if (! lseInput.IsDataConfirmed())
     {
         solvingStatus.set_text("СЛАР ще не встановлена");
         return;
     }
 
-    auto eqsCount = lseInput->EqsCount;
-    auto& A = lseInput->A;
-    auto& B = lseInput->B;
+    auto eqsCount = lseInput.GetEquationsCount().value();
+
+    auto& A = lseInput.GetVariablesCoefficientsRef().value().get();
+    auto& B = lseInput.GetFreeCoefficientsRef().value().get();
 
     auto solvingMethodP = LSESolverFactoryProduce(
         comboBoxMethodRecords[
@@ -781,7 +890,7 @@ void LSESolverUI::onSolvingProcess()
     {
         lseSolveOutput.lock()->ClearSolve();
 
-        lseSolvesPlaceV.SolvingStatus = LSESolvingStatus::SolvedFailful;
+        lseSolvesPlaceV.SetSolvingStatus(LSESolvingStatus::SolvedFailful);
         solvingStatus.set_text("СЛАР не можливо вирішити цим методом");
         practicalTimeComplexity.set_text("");
         return;
@@ -789,10 +898,10 @@ void LSESolverUI::onSolvingProcess()
 
     auto X = solvingMethod.GetVariablesSolvesOnce().value();
 
-    lseSolvesPlaceV.X = std::move(X);
-    lseSolvesPlaceV.SolvingStatus = LSESolvingStatus::SolvedSuccessfuly;
+    lseSolvesPlaceV.SetVarsSolve(std::move(X));
+    lseSolvesPlaceV.SetSolvingStatus(LSESolvingStatus::SolvedSuccessfully);
 
-    lseInput->IsSetted = false;
+    lseInput.ClearData();
 
     solvingStatus.set_text(
         std::format("СЛАР вирішено {}", GetCurrentFormalTime())
@@ -804,15 +913,17 @@ void LSESolverUI::onSolvingProcess()
     lseSolveOutput.lock()->OutputSolve();
 }
 
+// class GUISession
+
 GUISession::GUISession() = default;
 
-void GUISession::Init(int argc, char *argv[])
+void GUISession::Init()
 {
     appWin.SetApplicationData(appData);
     appWin.ReadyWindow();
 }
 
-Gtk::Window& GUISession::GetWindow()
+Gtk::Window& GUISession::GetWindowRef()
 {
     return appWin;
 }
