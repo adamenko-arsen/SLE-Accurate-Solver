@@ -19,9 +19,12 @@ CPPLINT='cppcheck'
 CPPLINTFLAGS='--std=c++23 --enable=style,warning,performance,portability,missingInclude --inconclusive'
 
 build() {
+    # create the object file structure excactly same as the source's one
+    rsync --include '*/' --exclude '*' "$SRC/" "$OBJ"
+
     find "$SRC" -type f -iname "*.cpp" | while read -r cpp;
     do
-        out="$OBJ/$(basename "${cpp%.cpp}.o")"
+        out="$OBJ/$(echo "$cpp" | sed "s!^$SRC\/!!" | sed 's/.cpp$/.o/')"
 
         # if there is no such object file still, then do build the file in any way
         if [ -e "$out" ];
@@ -62,8 +65,9 @@ build() {
         bash -c "$cmd"
     done
 
-    # output a build command and run it
-    cmd="\"$LINK\" $LINKFLAGS $OBJ/*.o -o \"$EXE\" $CPPLIBS"
+    # output a build command and run it.
+    # find all object files recursively
+    cmd="\"$LINK\" $LINKFLAGS $(find "$OBJ" -iname '*.o' | xargs) -o \"$EXE\" $CPPLIBS"
 
     echo "$cmd"
     bash -c "$cmd"

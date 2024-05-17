@@ -15,29 +15,34 @@
 
 #include <vector>
 
+std::ptrdiff_t GetTimeSeconds()
+{
+    return time(NULL);
+}
+
 std::string GetCurrentFormalTime()
 {
-    auto t = time(NULL);
+    auto secs = GetTimeSeconds();
 
     return std::format(
           "{}:{}:{} UTC+00:00"
-        , t / 3600 % 24
-        , t / 60 % 60
-        , t % 60
+        , secs / (60 * 60) % 24
+        , secs / 60 % 60
+        , secs % 60
     );
 }
 
-double PutInRange(double x, double f, double t)
+double PutInRange(double value, double from, double to)
 {
-    if (! (f <= x))
+    if (! (from <= value))
     {
-        return f;
+        return from;
     }
-    if (! (x <= t))
+    if (! (value <= to))
     {
-        return t;
+        return to;
     }
-    return x;
+    return value;
 }
 
 void LSEConfigurator::SetLSEInputData(std::weak_ptr<LSEInputData> lseInputData)
@@ -45,9 +50,9 @@ void LSEConfigurator::SetLSEInputData(std::weak_ptr<LSEInputData> lseInputData)
     this->lseData = lseInputData;
 }
 
-double Logarithm(double powered, double base)
+double Logarithm(double poweredValue, double base)
 {
-    return std::log(powered) / std::log(base);
+    return std::log(poweredValue) / std::log(base);
 }
 
 LSESolveOutput::LSESolveOutput()
@@ -79,149 +84,154 @@ LSESolveOutput::LSESolveOutput()
     );
 
     outputGraph.set_size_request(300, 300);
-    outputGraph.signal_draw().connect([this_ = this](const Cairo::RefPtr<Cairo::Context>& cr)
-    {
-        auto& outputGraph = this_->outputGraph;
-
-        Gtk::Allocation allocation = outputGraph.get_allocation();
-
-        const std::ptrdiff_t width = allocation.get_width();
-        const std::ptrdiff_t height = allocation.get_height();
-
-        cr->set_source_rgb(0, 0, 0);
-        cr->rectangle(0, 0, width, height);
-        cr->fill();
-
-        if (! this_->doRenderGraph)
+    outputGraph.signal_draw().connect
+    (
+        [this_ = this](const Cairo::RefPtr<Cairo::Context>& canvas)
         {
+            auto& outputGraph = this_->outputGraph;
+
+            Gtk::Allocation canvasAlloc = outputGraph.get_allocation();
+
+            const std::ptrdiff_t width = canvasAlloc.get_width();
+            const std::ptrdiff_t height = canvasAlloc.get_height();
+
+            canvas->set_source_rgb(0, 0, 0);
+            canvas->rectangle(0, 0, width, height);
+            canvas->fill();
+
+            if (! this_->doRenderGraph)
+            {
+                return true;
+            }
+
+            auto& lseInputData = *this_->lseInputData.lock();
+            auto& lseSolveData = *this_->lseSolveData.lock();
+
+            auto coeffA1 = PutInRange(lseInputData.A.At(0, 0), 0.01, 100);
+            auto coeffB1 = PutInRange(lseInputData.A.At(0, 1), 0.01, 100);
+            auto coeffC1 = lseInputData.B[0];
+
+            auto coeffA2 = PutInRange(lseInputData.A.At(1, 0), 0.01, 100);
+            auto coeffB2 = PutInRange(lseInputData.A.At(1, 1), 0.01, 100);
+            auto coeffC2 = lseInputData.B[1];
+
+            const auto& solves = lseSolveData.X;
+
+            auto solveX = solves[0];
+            auto solveY = solves[1];
+
+            if (! (lseInputData.EqsCount == 2))
+            {
+                return true;
+            }
+
+            double centerX = width / 2.0;
+            double centerY = height / 2.0;
+
+            double maxSolvedVarValue = std::max(
+                std::fabs(solveX), std::fabs(solveY)
+            );
+
+            double pixelsToValueScale = (std::min(width, height) / 2) / maxSolvedVarValue / 2;
+
+            // Draw major and minor lines:
+            double minorLinesPower = std::floor(Logarithm(maxSolvedVarValue, 10));
+            double majorLinesPower = std::floor(Logarithm(10 * maxSolvedVarValue, 10));
+
+            double minorLinesValueStep = std::pow(10, minorLinesPower);
+            double majorLinesValueStep = std::pow(10, majorLinesPower);
+
+            double minorLinesPixelsStep = minorLinesValueStep * pixelsToValueScale;
+            double majorLinesPixelsStep = majorLinesValueStep * pixelsToValueScale;
+
+            double minorLinesCountByX = std::ceil((width / 2) / minorLinesPixelsStep) * minorLinesPixelsStep;
+            double minorLinesCountByY = std::ceil((height / 2) / minorLinesPixelsStep) * minorLinesPixelsStep;
+
+            double majorLinesCountByX = std::ceil((width / 2) / majorLinesPixelsStep) * majorLinesPixelsStep;
+            double majorLinesCountByY = std::ceil((height / 2) / majorLinesPixelsStep) * majorLinesPixelsStep;
+
+            canvas->set_source_rgb(0.25, 0.25, 0.25);
+            for (std::ptrdiff_t i = -minorLinesCountByX; i <= minorLinesCountByX; i++)
+            {
+                canvas->move_to(width / 2 + minorLinesPixelsStep * i, 0);
+                canvas->line_to(width / 2 + minorLinesPixelsStep * i, height);
+                canvas->stroke();
+            }
+
+            for (std::ptrdiff_t i = -minorLinesCountByY; i <= minorLinesCountByY; i++)
+            {
+                canvas->move_to(0,     height / 2 + minorLinesPixelsStep * i);
+                canvas->line_to(width, height / 2 + minorLinesPixelsStep * i);
+                canvas->stroke();
+            }
+
+            canvas->set_source_rgb(0.6, 0.6, 0.6);
+            for (std::ptrdiff_t i = -majorLinesCountByX; i <= majorLinesCountByX; i++)
+            {
+                canvas->move_to(width / 2 + majorLinesPixelsStep * i, 0);
+                canvas->line_to(width / 2 + majorLinesPixelsStep * i, height);
+                canvas->stroke();
+            }
+
+            for (std::ptrdiff_t i = -majorLinesCountByY; i <= majorLinesCountByY; i++)
+            {
+                canvas->move_to(0,     height / 2 + majorLinesPixelsStep * i);
+                canvas->line_to(width, height / 2 + majorLinesPixelsStep * i);
+                canvas->stroke();
+            }
+
+            // Draw X and Y axes
+            canvas->set_line_width(2.0);
+            canvas->set_source_rgb(0.0, 1.0, 0.0);
+
+            canvas->move_to(0.0, centerY);
+            canvas->line_to(width, centerY);
+
+            canvas->move_to(centerX, 0.0);
+            canvas->line_to(centerX, height);
+            canvas->stroke();
+
+            double coeffK1 = -coeffA1 / coeffB1;
+            double coeffBase1 = coeffC1 / coeffB1;
+
+            double coeffK2 = -coeffA2 / coeffB2;
+            double coeffBase2 = coeffC2 / coeffB2;
+
+            // Draw the first line
+            canvas->set_source_rgb(1.0, 0.0, 0.0);
+            canvas->move_to(0,     centerY - (-centerX * coeffK1 + coeffBase1 * pixelsToValueScale));
+            canvas->line_to(width, centerY - (centerX * coeffK1 + coeffBase1 * pixelsToValueScale));
+            canvas->stroke();
+
+            // Draw the second line
+            canvas->set_source_rgb(0.0, 0.0, 1.0);
+            canvas->move_to(0,     centerY - (-centerX * coeffK2 + coeffBase2 * pixelsToValueScale));
+            canvas->line_to(width, centerY - (centerX * coeffK2 + coeffBase2 * pixelsToValueScale));
+            canvas->stroke();
+
+            // Draw X and Y axises text.
+            canvas->set_font_size(12);
+            canvas->move_to(centerX + 12 / 2 * 1.5, 12);
+
+            canvas->set_source_rgb(1, 1, 1);
+            canvas->show_text("Y (X2)");
+
+            canvas->move_to(width - 36, centerY + 12 * 1.5);
+            canvas->show_text("X (X1)");
+
+            // Draw coordinate
+            canvas->set_font_size(12);
+            canvas->move_to(centerX + solveX * pixelsToValueScale, centerY - solveY * pixelsToValueScale);
+            canvas->show_text("(x=" + std::to_string(solveX) + " y=" + std::to_string(solveY) + ")");
+
+            // Draw minor and major lines scale
+            canvas->set_font_size(12);
+            canvas->move_to(18, 18);
+            canvas->show_text(std::format("Масштаб ліній відліку змінних: 10^{} = {}", minorLinesPower, std::pow(10, minorLinesPower)));
+
             return true;
         }
-
-        auto& lseInputData = *this_->lseInputData.lock();
-        auto& lseSolveData = *this_->lseSolveData.lock();
-
-        auto A1 = PutInRange(lseInputData.A.At(0, 0), 0.01, 100);
-        auto B1 = PutInRange(lseInputData.A.At(0, 1), 0.01, 100);
-        auto C1 = lseInputData.B[0];
-
-        auto A2 = PutInRange(lseInputData.A.At(1, 0), 0.01, 100);
-        auto B2 = PutInRange(lseInputData.A.At(1, 1), 0.01, 100);
-        auto C2 = lseInputData.B[1];
-
-        auto X = lseSolveData.X[0];
-        auto Y = lseSolveData.X[1];
-
-        if (! (lseInputData.eqsCount == 2))
-        {
-            return true;
-        }
-
-        double center_x = width / 2.0;
-        double center_y = height / 2.0;
-
-        double maxSolvedVarValue = std::max(
-            std::fabs(X), std::fabs(Y)
-        );
-
-        double koeff = (std::min(width, height) / 2) / maxSolvedVarValue / 2;
-
-        // Draw major and minor lines:
-        double Cp = std::floor(Logarithm(maxSolvedVarValue, 10));
-        double Dp = std::floor(Logarithm(10 * maxSolvedVarValue, 10));
-
-        double C = std::pow(10, Cp);
-        double D = std::pow(10, Dp);
-
-        double MinStep = C * koeff;
-        double MajStep = D * koeff;
-
-        double MinXL = std::ceil((height / 2) / MinStep) * MinStep;
-        double MinYL = std::ceil((width / 2) / MinStep) * MinStep;
-
-        double MajXL = std::ceil((height / 2) / MajStep) * MajStep;
-        double MajYL = std::ceil((width / 2) / MajStep) * MajStep;
-
-        cr->set_source_rgb(0.25, 0.25, 0.25);
-        for (std::ptrdiff_t i = -MinXL; i <= MinXL; i++)
-        {
-            cr->move_to(width / 2 + MinStep * i, 0);
-            cr->line_to(width / 2 + MinStep * i, height);
-            cr->stroke();
-        }
-
-        for (std::ptrdiff_t i = -MinYL; i <= MinYL; i++)
-        {
-            cr->move_to(0,     height / 2 + MinStep * i);
-            cr->line_to(width, height / 2 + MinStep * i);
-            cr->stroke();
-        }
-
-        cr->set_source_rgb(0.6, 0.6, 0.6);
-        for (std::ptrdiff_t i = -MajXL; i <= MajXL; i++)
-        {
-            cr->move_to(width / 2 + MajStep * i, 0);
-            cr->line_to(width / 2 + MajStep * i, height);
-            cr->stroke();
-        }
-
-        for (std::ptrdiff_t i = -MajYL; i <= MajYL; i++)
-        {
-            cr->move_to(0,     height / 2 + MajStep * i);
-            cr->line_to(width, height / 2 + MajStep * i);
-            cr->stroke();
-        }
-
-        // Draw X and Y axes
-        cr->set_line_width(2.0);
-        cr->set_source_rgb(0.0, 1.0, 0.0);
-
-        cr->move_to(0.0, center_y); // Move to the center of Y axis
-        cr->line_to(width, center_y); // Draw X axis
-
-        cr->move_to(center_x, 0.0); // Move to the center of X axis
-        cr->line_to(center_x, height); // Draw Y axis
-        cr->stroke();
-
-        double m1 = -A1 / B1;
-        double b1 = C1 / B1;
-
-        double m2 = -A2 / B2;
-        double b2 = C2 / B2;
-
-        // Draw the first line
-        cr->set_source_rgb(1.0, 0.0, 0.0);
-        cr->move_to(0,     center_y - (-center_x * m1 + b1 * koeff));
-        cr->line_to(width, center_y - (center_x * m1 + b1 * koeff));
-        cr->stroke();
-
-        // Draw the second line
-        cr->set_source_rgb(0.0, 0.0, 1.0);
-        cr->move_to(0,     center_y - (-center_x * m2 + b2 * koeff));
-        cr->line_to(width, center_y - (center_x * m2 + b2 * koeff));
-        cr->stroke();
-
-        // Draw X and Y axises text.
-        cr->set_font_size(12);
-        cr->move_to(center_x + 12 / 2 * 1.5, 12);
-
-        cr->set_source_rgb(1, 1, 1);
-        cr->show_text("Y");
-
-        cr->move_to(width - 12, center_y + 12 * 1.5);
-        cr->show_text("X");
-
-        // Draw coordinate
-        cr->set_font_size(12);
-        cr->move_to(center_x + X * koeff, center_y - Y * koeff);
-        cr->show_text("(x=" + std::to_string(X) + " y=" + std::to_string(Y) + ")");
-
-        // Draw minor and major lines scale
-        cr->set_font_size(12);
-        cr->move_to(18, 18);
-        cr->show_text(std::format("Масштаб ліній відліку змінних: 10^{} = {}", Cp, std::pow(10, Cp)));
-
-        return true;
-    });
+    );
 
     boxLayout.show_all_children();
     boxLayout.show();
@@ -234,14 +244,15 @@ void LSESolveOutput::OutputSolve()
     std::string varsValuesStr{};
 
     auto& lseSolveDataV = *lseSolveData.lock();
+    const auto& solves = lseSolveDataV.X;
 
-    for (std::size_t i = 0; i < lseSolveDataV.X.Size(); i++)
+    for (std::size_t solveIndex = 0; solveIndex < solves.Size(); solveIndex++)
     {
-        if (i != 0)
+        if (solveIndex != 0)
         {
             varsValuesStr += "\n";
         }
-        varsValuesStr += std::format("X{}: {}", i + 1, lseSolveDataV.X[i]);
+        varsValuesStr += std::format("X{}: {}", solveIndex + 1, solves[solveIndex]);
     }
 
     varsValues.set_text(varsValuesStr);
@@ -270,21 +281,21 @@ void LSESolveOutput::saveSolve()
 
     std::string formattedSolves = "";
 
-    auto& X = lseSolveDataV.X;
+    auto& solves = lseSolveDataV.X;
 
-    for (std::size_t i = 0; i < X.Size(); i++)
+    for (std::size_t solveIndex = 0; solveIndex < solves.Size(); solveIndex++)
     {
-        if (i >= 1)
+        if (solveIndex != 0)
         {
             formattedSolves += " ";
         }
-        formattedSolves += std::to_string(X[i]);
+        formattedSolves += std::to_string(solves[solveIndex]);
     }
 
     WriteToFile(outputFileName.get_text(), formattedSolves);
 }
 
-std::string FormatExecTime(double x)
+std::string FormatExecTime(double execTime)
 {
     struct functions
     {
@@ -294,30 +305,30 @@ std::string FormatExecTime(double x)
         }
     };
 
-    constexpr double b = 10;
+    constexpr double baseMax = 10;
 
-    if (x < 0)
+    if (execTime < 0)
     {
-        return "(negative value)";
+        return "(негативне значення)";
     }
     
-    if (x >= 10)
+    if (execTime >= 10)
     {
-        return std::to_string(functions::toInt(x)) + " с";
+        return std::to_string(functions::toInt(execTime)) + " с";
     }
-    if (x >= (b / 1'000))
+    if (execTime >= (baseMax / 1'000))
     {
-        return std::to_string(functions::toInt(x * 1'000)) + " мс";
+        return std::to_string(functions::toInt(execTime * 1'000)) + " мс";
     }
-    if (x >= (b / 1'000'000))
+    if (execTime >= (baseMax / 1'000'000))
     {
-        return std::to_string(functions::toInt(x * 1'000'000)) + " μс";
+        return std::to_string(functions::toInt(execTime * 1'000'000)) + " μс";
     }
-    if (x >= (b / 1'000'000'000))
+    if (execTime >= (baseMax / 1'000'000'000))
     {
-        return std::to_string(functions::toInt(x * 1'000'000'000)) + " нс";
+        return std::to_string(functions::toInt(execTime * 1'000'000'000)) + " нс";
     }
-    return std::to_string(functions::toInt(x * 1'000'000'000'000)) + " пс";
+    return std::to_string(functions::toInt(execTime * 1'000'000'000'000)) + " пс";
 }
 
 void ApplicationWindow::initializeWindowHead()
@@ -348,10 +359,12 @@ void ApplicationWindow::initializeWidgets()
     set_sensitive(false);
 
     add(fixedLayout);
-    fixedLayout.show();
+
     fixedLayout.put(lseConfigurator, 0, 0);
     fixedLayout.put(lseSolver, 650, 0);
     fixedLayout.put(*lseSolveOutput, 650, 310);
+
+    fixedLayout.show();
 
     lseConfigurator.show();
     lseSolver.show();
@@ -461,18 +474,18 @@ std::string GetCoeffBFancyLabel(double eqIndex)
 void LSEConfigurator::setEqsAsInput()
 {
     auto lseInputData = lseData.lock();
-    auto eqsCount = lseInputData->eqsCount;
+    auto eqsCount = lseInputData->EqsCount;
 
-    for (std::size_t y = 0; y < eqsCount; y++)
+    for (std::size_t cellY = 0; cellY < eqsCount; cellY++)
     {
-        for (std::size_t x = 0; x < eqsCount; x++)
+        for (std::size_t cellX = 0; cellX < eqsCount; cellX++)
         {
-            auto mayCoeffA = ToNumber(varsCoeffsEntries.At(y, x).get_text());
+            auto mayCoeffA = ToNumber(varsCoeffsEntries.At(cellY, cellX).get_text());
 
             if (! mayCoeffA.has_value())
             {
                 eqsConfStatus.set_text(
-                    std::format("Комірка {} не є числом", GetCoeffAFancyLabel(y, x))
+                    std::format("Комірка {} не є числом", GetCoeffAFancyLabel(cellY, cellX))
                 );
                 return;
             }
@@ -482,20 +495,20 @@ void LSEConfigurator::setEqsAsInput()
             if (! (-1'000 <= coeffA && coeffA <= 1'000))
             {
                 eqsConfStatus.set_text(
-                    std::format("Комірка {} не є в діапазоні [-1'000; 1'000]", GetCoeffAFancyLabel(y, x))
+                    std::format("Комірка {} не є в діапазоні [-1'000; 1'000]", GetCoeffAFancyLabel(cellY, cellX))
                 );
                 return;
             }
 
-            lseInputData->A.At(y, x) = coeffA;
+            lseInputData->A.At(cellY, cellX) = coeffA;
         }
 
-        auto mayCoeffB = ToNumber(freeCoeffsEntries[y].get_text());
+        auto mayCoeffB = ToNumber(freeCoeffsEntries[cellY].get_text());
 
         if (! mayCoeffB.has_value())
         {
             eqsConfStatus.set_text(
-                std::format("Комірка {} не є числом", GetCoeffBFancyLabel(y))
+                std::format("Комірка {} не є числом", GetCoeffBFancyLabel(cellY))
             );
             return;
         }
@@ -505,12 +518,12 @@ void LSEConfigurator::setEqsAsInput()
         if (! (-10'000 <= coeffB && coeffB <= 10'000))
         {
             eqsConfStatus.set_text(
-                std::format("Комірка {} не є в діапазоні [-10'000; 10'000]", GetCoeffBFancyLabel(y))
+                std::format("Комірка {} не є в діапазоні [-10'000; 10'000]", GetCoeffBFancyLabel(cellY))
             );
             return;
         }
 
-        lseInputData->B[y] = coeffB;
+        lseInputData->B[cellY] = coeffB;
     }
 
     eqsConfStatus.set_text(
@@ -598,7 +611,7 @@ void LSEConfigurator::createEqsForm(std::size_t eqsCount)
 
     auto lseDataP = lseData.lock();
 
-    lseDataP->eqsCount = eqsCount;
+    lseDataP->EqsCount = eqsCount;
     lseDataP->A = Matrix(eqsCount, eqsCount);
     lseDataP->B = Vector(eqsCount);
     lseDataP->IsSetted = false;
@@ -612,7 +625,7 @@ void LSEConfigurator::createEqsForm(std::size_t eqsCount)
 
 void LSEConfigurator::removeEqsForm()
 {
-    std::size_t eqsCount = lseData.lock()->eqsCount;
+    std::size_t eqsCount = lseData.lock()->EqsCount;
 
     varsCoeffsGrid.hide();
     freeCoeffsGrid.hide();
@@ -627,7 +640,7 @@ void LSEConfigurator::removeEqsForm()
 
     auto lseDataP = lseData.lock();
 
-    lseDataP->eqsCount = 0;
+    lseDataP->EqsCount = 0;
     lseDataP->A = Matrix();
     lseDataP->B = Vector();
     lseDataP->IsSetted = false;
@@ -638,7 +651,7 @@ void LSEConfigurator::removeEqsForm()
 
 void LSEConfigurator::fillEmptyEntriesWithZeroes()
 {
-    auto eqsCount = lseData.lock()->eqsCount;
+    auto eqsCount = lseData.lock()->EqsCount;
 
     for (std::size_t y = 0; y < eqsCount; y++)
     {
@@ -744,7 +757,7 @@ void LSESolverUI::onSolvingProcess()
         return;
     }
 
-    auto eqsCount = lseInput->eqsCount;
+    auto eqsCount = lseInput->EqsCount;
     auto& A = lseInput->A;
     auto& B = lseInput->B;
 

@@ -14,7 +14,7 @@
 
 struct LSEInputData
 {
-    std::size_t eqsCount = 0;
+    std::size_t EqsCount = 0;
     Matrix A{};
     Vector B{};
 

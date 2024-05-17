@@ -3,13 +3,14 @@
 This program helps to solve system of linear equations by different accurate methods. This project has given for me as course work (KPI, 1st course, 2nd term).
 
 # Main
+
 ## Method
 
 1. LUP-method
 1. Gauss-Holetskiy method
 1. Rotation method
 
-## Features (not all are implemented yet)
+## Features
 
 - the opportunity to try to solve any SLE
 - the opportunity to choose a solving method freely
@@ -18,7 +19,7 @@ This program helps to solve system of linear equations by different accurate met
 - the ability to warn an user about his/her incorrect behaviour with this software
 - the ability to warn an user about impossibility of solving sort of inputed issues which cannot be performed (cannot solve SLE, cannot output to file, etc)
 
-## Requirements
+## System requirements
 
 <table>
   <th>
@@ -26,7 +27,7 @@ This program helps to solve system of linear equations by different accurate met
   </th>
   <tr>
     <td>OS</td>
-    <td>Linux</td>
+    <td>Linux (probably)</td>
     <td>ArchLinux</td>
   </tr>
   <tr>
@@ -71,12 +72,9 @@ $ make.sh run
 ```
 
 My personal C++ compiler:
-```sh
+```
 $ g++ --version
 g++ (GCC) 14.1.1 20240507
 ```
 
-The project C++ recommended version:
-```sh
-C++23
-```
+The project C++ recommended version: `C++23`
