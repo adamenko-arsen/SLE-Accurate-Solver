@@ -179,20 +179,20 @@ void SLEConfigurator::SetSLEInputData(std::weak_ptr<SLEInputData> sleInputData)
     this->sleData = sleInputData;
 }
 
-void SLESolveOutput::SetSLEInputData(std::weak_ptr<SLEInputData> sleInputData)
+void SLESolveShower::SetSLEInputData(std::weak_ptr<SLEInputData> sleInputData)
 {
     this->sleInputData = sleInputData;
 }
 
-void SLESolveOutput::SetSLESolveData(std::weak_ptr<SLESolveData> sleSolveData)
+void SLESolveShower::SetSLESolveData(std::weak_ptr<SLESolveData> sleSolveData)
 {
     this->sleSolveData = sleSolveData;
 }
 
-SLESolveOutput::SLESolveOutput()
+SLESolveShower::SLESolveShower()
 {
     set_label("Виведення рішень СЛАР");
-    set_size_request(360, 240);
+    set_size_request(400, 400);
 
     add(boxLayout);
 
@@ -203,8 +203,8 @@ SLESolveOutput::SLESolveOutput()
 
     boxLayout.pack_start(outputStatus);
 
-    boxLayout.pack_start(outputFileName);
     boxLayout.pack_start(outputSolveLabel);
+    boxLayout.pack_start(outputFileName);
     boxLayout.pack_start(outputButton);
 
     boxLayout.pack_start(varsDesc);
@@ -220,7 +220,7 @@ SLESolveOutput::SLESolveOutput()
         sigc::mem_fun
         (
               *this
-            , &SLESolveOutput::saveSolve
+            , &SLESolveShower::saveSolve
         )
     );
 
@@ -378,8 +378,10 @@ SLESolveOutput::SLESolveOutput()
 
             // Draw minor and major lines scale
             canvas->set_font_size(12);
-            canvas->move_to(18, 18);
-            canvas->show_text(std::format("Масштаб ліній відліку змінних: 10^{} = {}", minorLinesPower, std::pow(10, minorLinesPower)));
+            canvas->move_to(18, 24);
+            canvas->show_text("Масштаб ліній відліку змінних");
+            canvas->move_to(18, 24 + 12 + 2);
+            canvas->show_text(std::format("(10^{} = {})", minorLinesPower, std::pow(10, minorLinesPower)));
 
             // Draw pretty border
             canvas->set_source_rgb(1, 1, 1);
@@ -397,7 +399,7 @@ SLESolveOutput::SLESolveOutput()
     boxLayout.show();
 }
 
-void SLESolveOutput::OutputSolve()
+void SLESolveShower::OutputSolve()
 {
     outputStatus.set_text(std::format("Рішення виведено {}", GetCurrentFormalTime()));
 
@@ -424,16 +426,16 @@ void SLESolveOutput::OutputSolve()
     }
 }
 
-void SLESolveOutput::ClearSolve()
+void SLESolveShower::ClearSolve()
 {
-    outputStatus.set_text(std::format("Рішення невиведено {}", GetCurrentFormalTime()));
-    varsValues.set_text("---");
+    outputStatus.set_text("Рішення неможливо отримати");
+    varsValues.set_text("Розв'язків немає");
 
     outputGraph.queue_draw();
     doRenderGraph = false;
 }
 
-void SLESolveOutput::saveSolve()
+void SLESolveShower::saveSolve()
 {
     auto& sleSolveDataV = *sleSolveData.lock();
 
@@ -524,8 +526,8 @@ void ApplicationWindow::initializeWidgets()
     add(fixedLayout);
 
     fixedLayout.put(sleConfigurator, 0, 0);
-    fixedLayout.put(sleSolver, 800 + 10, 0);
-    fixedLayout.put(*sleSolveOutput, 800 + 10, 310);
+    fixedLayout.put(sleSolver, 1200 + 10, 0);
+    fixedLayout.put(*sleSolveOutput, 1200 + 10, 260 + 10);
 
     fixedLayout.show();
 
@@ -549,7 +551,7 @@ ApplicationWindow::ApplicationWindow()
 SLEConfigurator::SLEConfigurator()
 {
     set_label("Конфігурація СЛАР");
-    set_size_request(800, -1);
+    set_size_request(1200, -1);
 
     add(boxLayout);
 
@@ -736,7 +738,8 @@ void SLEConfigurator::setEqsAsInput()
 void SLEConfigurator::initializeEqsForm()
 {
     eqsFormBox.pack_start(varsCoeffsGrid, Gtk::PACK_SHRINK);
-    eqsFormBox.pack_start(freeCoeffsGrid, Gtk::PACK_SHRINK, 12);
+    eqsFormBox.pack_start(eqMarksGrid, Gtk::PACK_SHRINK);
+    eqsFormBox.pack_start(freeCoeffsGrid, Gtk::PACK_SHRINK);
 
     eqsFormBox.show_all_children();
 }
@@ -766,13 +769,15 @@ void SLEConfigurator::onEqsCountSetting()
     eqsConfStatus.set_text("Встановлено кількість рівнянь");
     eqsCountValue.set_text(std::to_string(eqsCount));
 
-    removeEqsForm();
-    createEqsForm(eqsCount);
+    removeSLEForm();
+    createSLEForm(eqsCount);
 }
 
-void SLEConfigurator::createEqsForm(std::size_t eqsCount)
+void SLEConfigurator::createSLEForm(std::size_t eqsCount)
 {
     varsCoeffsEntries = RTArray2D<Gtk::Entry>(eqsCount, eqsCount);
+    varsCoeffsLabels  = RTArray2D<Gtk::Label>(eqsCount * 2, eqsCount);
+    leEquationMarkLabels = std::vector<Gtk::Label>(eqsCount);
     freeCoeffsEntries = std::vector<Gtk::Entry>(eqsCount);
 
     auto& sleDataV = *sleData.lock();
@@ -789,7 +794,7 @@ void SLEConfigurator::createEqsForm(std::size_t eqsCount)
             auto& newVarCoeff = varsCoeffsEntries.At(y, x);
             
             newVarCoeff = Gtk::Entry();
-            newVarCoeff.set_width_chars(5);
+            newVarCoeff.set_width_chars(4);
 
             newVarCoeff.set_placeholder_text
             (
@@ -800,13 +805,31 @@ void SLEConfigurator::createEqsForm(std::size_t eqsCount)
                 GetCoeffAFancyLabel(y, x)
             );
 
-            varsCoeffsGrid.attach(newVarCoeff, x, y);
+            auto& newIndexedVar  = varsCoeffsLabels.At(y, 2 * x);
+            auto& newOperatorAdd = varsCoeffsLabels.At(y, 2 * x + 1);
+
+            newIndexedVar.set_text(std::format(" X{}", x + 1));
+            newOperatorAdd.set_text("+");
+            newOperatorAdd.set_size_request(24, -1);
+
+            varsCoeffsGrid.attach(newVarCoeff   , 3 * x, y);
+            varsCoeffsGrid.attach(newIndexedVar , 3 * x + 1, y);
+
+            if (x != eqsCount - 1)
+            {
+                varsCoeffsGrid.attach(newOperatorAdd, 3 * x + 2, y);
+            }
         }
 
-        auto& newFreeCoeff = freeCoeffsEntries[y];
+        auto& newLEEquationMark = leEquationMarkLabels[y];
+        newLEEquationMark = Gtk::Label();
+        newLEEquationMark.set_text("=");
+        newLEEquationMark.set_size_request(32, 30);
+        eqMarksGrid.attach(newLEEquationMark, 0, y);
 
+        auto& newFreeCoeff = freeCoeffsEntries[y];
         newFreeCoeff = Gtk::Entry();
-        newFreeCoeff.set_width_chars(5);
+        newFreeCoeff.set_width_chars(3);
 
         newFreeCoeff.set_placeholder_text
         (
@@ -821,13 +844,15 @@ void SLEConfigurator::createEqsForm(std::size_t eqsCount)
     }
 
     varsCoeffsGrid.show_all_children();
+    eqMarksGrid.show_all_children();
     freeCoeffsGrid.show_all_children();
 
     varsCoeffsGrid.show();
+    eqMarksGrid.show();
     freeCoeffsGrid.show();
 }
 
-void SLEConfigurator::removeEqsForm()
+void SLEConfigurator::removeSLEForm()
 {
     auto& sleDataV = *sleData.lock();
 
@@ -840,17 +865,21 @@ void SLEConfigurator::removeEqsForm()
     sleDataV.ClearData();
 
     varsCoeffsGrid.hide();
+    eqMarksGrid.hide();
     freeCoeffsGrid.hide();
 
     for (std::size_t y = 0; y < eqsCount; y++)
     {
         varsCoeffsGrid.remove_column(0);
-        varsCoeffsGrid.remove_row(0);
-
+        eqMarksGrid.remove_column(0);
         freeCoeffsGrid.remove_column(0);
     }
 
     varsCoeffsEntries = RTArray2D<Gtk::Entry>();
+    varsCoeffsLabels  = RTArray2D<Gtk::Label>();
+
+    leEquationMarkLabels = std::vector<Gtk::Label>{};
+
     freeCoeffsEntries = std::vector<Gtk::Entry>();
 }
 
@@ -893,7 +922,7 @@ void SLEConfigurator::fillEmptyEntriesWithZeroes()
 SLESolvePanel::SLESolvePanel()
 {
     set_label("Розв'язання СЛАР");
-    set_size_request(360, 300);
+    set_size_request(400, 260);
 
     add(solverRootBox);
 
@@ -946,7 +975,7 @@ void SLESolvePanel::SetSLESolveData(std::weak_ptr<SLESolveData> sleSolveData)
     this->sleSolveData = sleSolveData;
 }
 
-void SLESolvePanel::SetSLESolveOutput(std::weak_ptr<SLESolveOutput> sleSolveOutput)
+void SLESolvePanel::SetSLESolveOutput(std::weak_ptr<SLESolveShower> sleSolveOutput)
 {
     this->sleSolveOutput = sleSolveOutput;
 }

@@ -7,7 +7,7 @@ EXE="Executable/Розв'язувач СЛАР.exe"
 
 CPP=g++
 CPPFLAGS='-std=c++23 -Wall -Wextra'
-CPPOPT=-g
+CPPOPT=-O0
 CPPLIBS='-ISources $(pkg-config --cflags --libs gtkmm-3.0)'
 CPPLINK=-s
 

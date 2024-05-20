@@ -155,17 +155,22 @@ private:
     void initializeEqsCount();
 
     void onEqsCountSetting();
-    void createEqsForm(std::size_t eqsCount);
-    void removeEqsForm();
+    void createSLEForm(std::size_t eqsCount);
+    void removeSLEForm();
 
     void fillEmptyEntriesWithZeroes();
 
     Gtk::Box eqsFormBox{};
 
     Gtk::Grid varsCoeffsGrid{};
+    Gtk::Grid eqMarksGrid{};
     Gtk::Grid freeCoeffsGrid{};
 
     RTArray2D<Gtk::Entry> varsCoeffsEntries{};
+    RTArray2D<Gtk::Label> varsCoeffsLabels{};
+
+    std::vector<Gtk::Label> leEquationMarkLabels{};
+
     std::vector<Gtk::Entry>  freeCoeffsEntries{};
 
     void initializeEqsForm();
@@ -173,10 +178,10 @@ private:
     std::weak_ptr<SLEInputData> sleData{};
 };
 
-class SLESolveOutput : public Gtk::Frame
+class SLESolveShower : public Gtk::Frame
 {
 public:
-    SLESolveOutput();
+    SLESolveShower();
 
     void SetSLEInputData(std::weak_ptr<SLEInputData> sleInputData);
     void SetSLESolveData(std::weak_ptr<SLESolveData> sleSolveData);
@@ -215,7 +220,7 @@ public:
     void SetSLEInputData(std::weak_ptr<SLEInputData> sleInputData);
     void SetSLESolveData(std::weak_ptr<SLESolveData> sleSolveData);
 
-    void SetSLESolveOutput(std::weak_ptr<SLESolveOutput> sleSolveOutput);
+    void SetSLESolveOutput(std::weak_ptr<SLESolveShower> sleSolveOutput);
 
 private:
     Gtk::Box solverRootBox{};
@@ -230,7 +235,7 @@ private:
 
     std::weak_ptr<SLEInputData> sleInputData;
     std::weak_ptr<SLESolveData> sleSolveData;
-    std::weak_ptr<SLESolveOutput> sleSolveOutput;
+    std::weak_ptr<SLESolveShower> sleSolveOutput;
 };
 
 class ApplicationWindow : public Gtk::Window
@@ -247,7 +252,7 @@ private:
 
     SLEConfigurator sleConfigurator;
     SLESolvePanel     sleSolver;
-    std::shared_ptr<SLESolveOutput> sleSolveOutput = std::make_shared<SLESolveOutput>();
+    std::shared_ptr<SLESolveShower> sleSolveOutput = std::make_shared<SLESolveShower>();
 
     void initializeWindowHead();
     void initializeWidgets();
