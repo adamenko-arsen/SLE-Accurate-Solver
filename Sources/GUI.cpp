@@ -10,8 +10,8 @@
 #include <string>
 #include <utility>
 
-#include "LSESolver.hpp"
-#include "LSESolversData.hpp"
+#include "SLESolver.hpp"
+#include "SLESolversData.hpp"
 
 #include <vector>
 
@@ -24,7 +24,8 @@ std::string GetCurrentFormalTime()
 {
     auto secs = GetTimeSeconds();
 
-    return std::format(
+    return std::format
+    (
           "{}:{}:{} UTC+00:00"
         , secs / (60 * 60) % 24
         , secs / 60 % 60
@@ -50,11 +51,20 @@ double Logarithm(double poweredValue, double base)
     return std::log(poweredValue) / std::log(base);
 }
 
-// class LSEInputData
+double FloorToZeroWithPrecision(double number, std::size_t maxDigits)
+{
+    bool isPositive = number >= 0;
 
-LSEInputData::LSEInputData() = default;
+    auto multiplier = std::pow(10, maxDigits);
 
-void LSEInputData::ClearData()
+    return (isPositive ? 1 : -1) * (std::floor(std::fabs(number) * multiplier) / multiplier);
+}
+
+// class SLEInputData
+
+SLEInputData::SLEInputData() = default;
+
+void SLEInputData::ClearData()
 {
     A = Matrix();
     B = Vector();
@@ -62,7 +72,7 @@ void LSEInputData::ClearData()
     isEqsCountSetted = false;
     isConfirmed = false;
 }
-void LSEInputData::SetEquationsCount(std::size_t eqsCount)
+void SLEInputData::SetEquationsCount(std::size_t eqsCount)
 {
     if (isEqsCountSetted)
     {
@@ -73,7 +83,7 @@ void LSEInputData::SetEquationsCount(std::size_t eqsCount)
 
     isEqsCountSetted = true;
 }
-std::optional<std::size_t> LSEInputData::GetEquationsCount() const noexcept
+std::optional<std::size_t> SLEInputData::GetEquationsCount() const noexcept
 {
     if (! isEqsCountSetted)
     {
@@ -81,12 +91,12 @@ std::optional<std::size_t> LSEInputData::GetEquationsCount() const noexcept
     }
     return eqsCount;
 }
-bool LSEInputData::IsEquationsCountSetted() const noexcept
+bool SLEInputData::IsEquationsCountSetted() const noexcept
 {
     return isEqsCountSetted;
 }
 
-std::optional<std::reference_wrapper<Matrix>> LSEInputData::GetVariablesCoefficientsRef()
+std::optional<std::reference_wrapper<Matrix>> SLEInputData::GetVariablesCoefficientsRef()
 {
     if (! isEqsCountSetted)
     {
@@ -94,7 +104,7 @@ std::optional<std::reference_wrapper<Matrix>> LSEInputData::GetVariablesCoeffici
     }
     return A;
 }
-std::optional<std::reference_wrapper<const Matrix>> LSEInputData::GetVariablesCoefficientsRef() const
+std::optional<std::reference_wrapper<const Matrix>> SLEInputData::GetVariablesCoefficientsRef() const
 {
     if (! isEqsCountSetted)
     {
@@ -103,7 +113,7 @@ std::optional<std::reference_wrapper<const Matrix>> LSEInputData::GetVariablesCo
     return A;
 }
 
-std::optional<std::reference_wrapper<Vector>> LSEInputData::GetFreeCoefficientsRef()
+std::optional<std::reference_wrapper<Vector>> SLEInputData::GetFreeCoefficientsRef()
 {
     if (! isEqsCountSetted)
     {
@@ -111,7 +121,7 @@ std::optional<std::reference_wrapper<Vector>> LSEInputData::GetFreeCoefficientsR
     }
     return B;
 }
-std::optional<std::reference_wrapper<const Vector>> LSEInputData::GetFreeCoefficientsRef() const
+std::optional<std::reference_wrapper<const Vector>> SLEInputData::GetFreeCoefficientsRef() const
 {
     if (! isEqsCountSetted)
     {
@@ -120,36 +130,36 @@ std::optional<std::reference_wrapper<const Vector>> LSEInputData::GetFreeCoeffic
     return B;
 }
 
-void LSEInputData::ConfirmData()
+void SLEInputData::ConfirmData()
 {
     isConfirmed = true;
 }
-bool LSEInputData::IsDataConfirmed() const noexcept
+bool SLEInputData::IsDataConfirmed() const noexcept
 {
     return isConfirmed;
 }
 
-// class LSESolveData
+// class SLESolveData
 
-LSESolveData::LSESolveData() = default;
+SLESolveData::SLESolveData() = default;
 
-void LSESolveData::SetSolvingStatus(LSESolvingStatus lseSolvingStatus)
+void SLESolveData::SetSolvingStatus(SLESolvingStatus sleSolvingStatus)
 {
-    solvingStatus = lseSolvingStatus;
+    solvingStatus = sleSolvingStatus;
 }
 
-std::optional<std::reference_wrapper<Vector>> LSESolveData::GetSolveRef()
+std::optional<std::reference_wrapper<Vector>> SLESolveData::GetSolveRef()
 {
-    if (! (solvingStatus == LSESolvingStatus::SolvedSuccessfully))
+    if (! (solvingStatus == SLESolvingStatus::SolvedSuccessfully))
     {
         return std::nullopt;
     }
 
     return X;
 }
-std::optional<std::reference_wrapper<const Vector>> LSESolveData::GetSolveRef() const
+std::optional<std::reference_wrapper<const Vector>> SLESolveData::GetSolveRef() const
 {
-    if (! (solvingStatus == LSESolvingStatus::SolvedSuccessfully))
+    if (! (solvingStatus == SLESolvingStatus::SolvedSuccessfully))
     {
         return std::nullopt;
     }
@@ -157,22 +167,32 @@ std::optional<std::reference_wrapper<const Vector>> LSESolveData::GetSolveRef() 
     return X;
 }
 
-LSESolvingStatus LSESolveData::GetSolvingStatus() const noexcept
+SLESolvingStatus SLESolveData::GetSolvingStatus() const noexcept
 {
     return solvingStatus;
 }
 
-// class LSEConfigurator
+// class SLEConfigurator
 
-void LSEConfigurator::SetLSEInputData(std::weak_ptr<LSEInputData> lseInputData)
+void SLEConfigurator::SetSLEInputData(std::weak_ptr<SLEInputData> sleInputData)
 {
-    this->lseData = lseInputData;
+    this->sleData = sleInputData;
 }
 
-LSESolveOutput::LSESolveOutput()
+void SLESolveOutput::SetSLEInputData(std::weak_ptr<SLEInputData> sleInputData)
+{
+    this->sleInputData = sleInputData;
+}
+
+void SLESolveOutput::SetSLESolveData(std::weak_ptr<SLESolveData> sleSolveData)
+{
+    this->sleSolveData = sleSolveData;
+}
+
+SLESolveOutput::SLESolveOutput()
 {
     set_label("Виведення рішень СЛАР");
-    set_size_request(320, 240);
+    set_size_request(360, 240);
 
     add(boxLayout);
 
@@ -182,18 +202,25 @@ LSESolveOutput::LSESolveOutput()
     boxLayout.set_spacing(10);
 
     boxLayout.pack_start(outputStatus);
+
     boxLayout.pack_start(outputFileName);
+    boxLayout.pack_start(outputSolveLabel);
     boxLayout.pack_start(outputButton);
+
     boxLayout.pack_start(varsDesc);
-    boxLayout.pack_start(outputGraph);
     boxLayout.pack_start(varsValues);
 
-    outputFileName.set_placeholder_text("Файл для виведення");
+    boxLayout.pack_start(outputGraphLabel);
+    boxLayout.pack_start(outputGraph);
 
-    outputButton.signal_clicked().connect(
-        sigc::mem_fun(
+    outputFileName.set_placeholder_text("Файл для виведення...");
+
+    outputButton.signal_clicked().connect
+    (
+        sigc::mem_fun
+        (
               *this
-            , &LSESolveOutput::saveSolve
+            , &SLESolveOutput::saveSolve
         )
     );
 
@@ -204,7 +231,7 @@ LSESolveOutput::LSESolveOutput()
         {
             auto& outputGraph = this_->outputGraph;
 
-            Gtk::Allocation canvasAlloc = outputGraph.get_allocation();
+            const Gtk::Allocation canvasAlloc = outputGraph.get_allocation();
 
             const std::ptrdiff_t width = canvasAlloc.get_width();
             const std::ptrdiff_t height = canvasAlloc.get_height();
@@ -215,14 +242,22 @@ LSESolveOutput::LSESolveOutput()
 
             if (! this_->doRenderGraph)
             {
+                // Draw scary border
+                canvas->set_source_rgb(1, 0, 0);
+                canvas->rectangle(0     , 0      , width , 1);
+                canvas->rectangle(0     , 0      , 1     , height);
+                canvas->rectangle(width , 0      , 1     , height);
+                canvas->rectangle(0     , height , width , 1);
+                canvas->stroke();
+
                 return true;
             }
 
-            const auto& lseInputData = *this_->lseInputData.lock();
-            const auto& lseSolveData = *this_->lseSolveData.lock();
+            const auto& sleInputData = *this_->sleInputData.lock();
+            const auto& sleSolveData = *this_->sleSolveData.lock();
 
-            const auto A = lseInputData.GetVariablesCoefficientsRef().value().get();
-            const auto B = lseInputData.GetFreeCoefficientsRef().value().get();
+            const auto A = sleInputData.GetVariablesCoefficientsRef().value().get();
+            const auto B = sleInputData.GetFreeCoefficientsRef().value().get();
 
             const auto coeffA1 = PutNumberToBounds(A.At(0, 0), 0.01, 100);
             const auto coeffB1 = PutNumberToBounds(A.At(0, 1), 0.01, 100);
@@ -232,12 +267,12 @@ LSESolveOutput::LSESolveOutput()
             const auto coeffB2 = PutNumberToBounds(A.At(1, 1), 0.01, 100);
             const auto coeffC2 = B[1];
 
-            const auto solves = lseSolveData.GetSolveRef().value().get();
+            const auto solves = sleSolveData.GetSolveRef().value().get();
 
             const auto solveX = solves[0];
             const auto solveY = solves[1];
 
-            if (! (lseInputData.GetEquationsCount().value() == 2))
+            if (! (sleInputData.GetEquationsCount().value() == 2))
             {
                 return true;
             }
@@ -249,7 +284,7 @@ LSESolveOutput::LSESolveOutput()
                 std::fabs(solveX), std::fabs(solveY)
             );
 
-            const double pixelsToValueScale = (std::min(width, height) / 2) / maxSolvedVarValue / 2;
+            const double pixelsToValueScale = (std::min(width, height) / 2) / maxSolvedVarValue / 3;
 
             // Draw major and minor lines:
             const double minorLinesPower = std::floor(Logarithm(maxSolvedVarValue, 10));
@@ -346,6 +381,14 @@ LSESolveOutput::LSESolveOutput()
             canvas->move_to(18, 18);
             canvas->show_text(std::format("Масштаб ліній відліку змінних: 10^{} = {}", minorLinesPower, std::pow(10, minorLinesPower)));
 
+            // Draw pretty border
+            canvas->set_source_rgb(1, 1, 1);
+            canvas->rectangle(0     , 0      , width , 1);
+            canvas->rectangle(0     , 0      , 1     , height);
+            canvas->rectangle(width , 0      , 1     , height);
+            canvas->rectangle(0     , height , width , 1);
+            canvas->stroke();
+
             return true;
         }
     );
@@ -354,13 +397,14 @@ LSESolveOutput::LSESolveOutput()
     boxLayout.show();
 }
 
-void LSESolveOutput::OutputSolve()
+void SLESolveOutput::OutputSolve()
 {
     outputStatus.set_text(std::format("Рішення виведено {}", GetCurrentFormalTime()));
 
     std::string varsValuesStr{};
 
-    const auto& solves = (*lseSolveData.lock()).GetSolveRef().value().get();
+    const auto& sleSolveDataV = *sleSolveData.lock();
+    const auto& solves = (sleSolveDataV).GetSolveRef().value().get();
 
     for (std::size_t solveIndex = 0; solveIndex < solves.Size(); solveIndex++)
     {
@@ -373,31 +417,34 @@ void LSESolveOutput::OutputSolve()
 
     varsValues.set_text(varsValuesStr);
 
-    doRenderGraph = true;
-    outputGraph.queue_draw();
+    if (solves.Size() == 2)
+    {
+        doRenderGraph = true;
+        outputGraph.queue_draw();
+    }
 }
 
-void LSESolveOutput::ClearSolve()
+void SLESolveOutput::ClearSolve()
 {
     outputStatus.set_text(std::format("Рішення невиведено {}", GetCurrentFormalTime()));
-    varsValues.set_text("");
+    varsValues.set_text("---");
 
-    doRenderGraph = false;
     outputGraph.queue_draw();
+    doRenderGraph = false;
 }
 
-void LSESolveOutput::saveSolve()
+void SLESolveOutput::saveSolve()
 {
-    auto& lseSolveDataV = *lseSolveData.lock();
+    auto& sleSolveDataV = *sleSolveData.lock();
 
-    if (lseSolveDataV.GetSolvingStatus() != LSESolvingStatus::SolvedSuccessfully)
+    if (sleSolveDataV.GetSolvingStatus() != SLESolvingStatus::SolvedSuccessfully)
     {
         return;
     }
 
     std::string formattedSolves = "";
 
-    const auto& solves = lseSolveDataV.GetSolveRef().value().get();
+    const auto& solves = sleSolveDataV.GetSolveRef().value().get();
 
     for (std::size_t solveIndex = 0; solveIndex < solves.Size(); solveIndex++)
     {
@@ -449,25 +496,25 @@ std::string FormatExecTime(double execTime)
 
 void ApplicationWindow::initializeWindowHead()
 {
-    set_title(windowTitle);
+    set_title("Розв'язальник СЛАР");
 
-    set_default_size(windowSize.first, windowSize.second);
+    set_default_size(1000, 600);
     set_resizable(false);
 
-    set_border_width(windowBorderWidth);
+    set_border_width(10);
 }
 
 void ApplicationWindow::SetApplicationData(std::weak_ptr<ApplicationData> appData)
 {
-    lseConfigurator.SetLSEInputData(appData.lock()->GetLSEInputDataRef());
+    sleConfigurator.SetSLEInputData(appData.lock()->GetSLEInputData());
 
-    lseSolver.SetLSEInputData(appData.lock()->GetLSEInputDataRef());
-    lseSolver.SetLSESolvesPlace(appData.lock()->GetLSEOutputDataRef());
+    sleSolver.SetSLEInputData(appData.lock()->GetSLEInputData());
+    sleSolver.SetSLESolveData(appData.lock()->GetSLEOutputData());
 
-    lseSolver.SetLSESolveOutputUIRef(lseSolveOutput);
+    sleSolver.SetSLESolveOutput(sleSolveOutput);
 
-    lseSolveOutput->SetLSEInputDataRef(appData.lock()->GetLSEInputDataRef());
-    lseSolveOutput->SetLSEOutputDataRef(appData.lock()->GetLSEOutputDataRef());
+    sleSolveOutput->SetSLEInputData(appData.lock()->GetSLEInputData());
+    sleSolveOutput->SetSLESolveData(appData.lock()->GetSLEOutputData());
 }
 
 void ApplicationWindow::initializeWidgets()
@@ -476,18 +523,18 @@ void ApplicationWindow::initializeWidgets()
 
     add(fixedLayout);
 
-    fixedLayout.put(lseConfigurator, 0, 0);
-    fixedLayout.put(lseSolver, 650, 0);
-    fixedLayout.put(*lseSolveOutput, 650, 310);
+    fixedLayout.put(sleConfigurator, 0, 0);
+    fixedLayout.put(sleSolver, 800 + 10, 0);
+    fixedLayout.put(*sleSolveOutput, 800 + 10, 310);
 
     fixedLayout.show();
 
-    lseConfigurator.show();
-    lseSolver.show();
-    (*lseSolveOutput).show();
+    sleConfigurator.show();
+    sleSolver.show();
+    (*sleSolveOutput).show();
 }
 
-void ApplicationWindow::ReadyWindow()
+void ApplicationWindow::Ready()
 {
     set_sensitive(true);
 }
@@ -499,10 +546,10 @@ ApplicationWindow::ApplicationWindow()
     initializeWidgets();
 }
 
-LSEConfigurator::LSEConfigurator()
+SLEConfigurator::SLEConfigurator()
 {
     set_label("Конфігурація СЛАР");
-    set_size_request(640, -1);
+    set_size_request(800, -1);
 
     add(boxLayout);
 
@@ -519,46 +566,69 @@ LSEConfigurator::LSEConfigurator()
     boxLayout.show();
 }
 
-void LSEConfigurator::initializeEqsCount()
+void SLEConfigurator::initializeEqsCount()
 {
     eqsPropConfGrid.attach(eqsConfStatus, 0, 0, 3, 1);
 
-    eqsPropConfGrid.attach(eqsCountProp, 0, 1);
-    eqsPropConfGrid.attach(eqsCountValue, 2, 1);
+    eqsPropConfGrid.attach(eqsCountProp, 0, 2);
+    eqsPropConfGrid.attach(eqsCountValue, 2, 2);
 
-    eqsCountFirstHorAlign.set_margin_right(18);
-    eqsPropConfGrid.attach(eqsCountFirstHorAlign, 1, 1, 1, 2);
+    eqsCountHorPadding1.set_margin_right(12);
+    eqsCountHorPadding2.set_margin_right(12);
 
-    eqsPropConfGrid.attach(eqsSetterProp, 0, 2);
-    eqsPropConfGrid.attach(eqsSetterEntry, 2, 2);
-    eqsPropConfGrid.attach(eqsSetterButton, 4, 2);
+    eqsCountVerPadding1.set_margin_bottom(18);
+    eqsCountVerPadding2.set_margin_bottom(18);
+    eqsCountVerPadding3.set_margin_bottom(18);
+    eqsCountVerPadding4.set_margin_bottom(36);
+    eqsCountVerPadding5.set_margin_bottom(18);
 
-    eqsPropConfGrid.attach(eqsZeroFillerButton, 0, 3);
-    eqsPropConfGrid.attach(eqsSetAsInput, 1, 3, 2, 1);
+    eqsPropConfGrid.attach(eqsCountHorPadding1, 1, 0, 1, 5);
+    eqsPropConfGrid.attach(eqsCountHorPadding2, 3, 0, 1, 5);
+
+    eqsPropConfGrid.attach(eqsCountVerPadding1, 0, 1, 5, 1);
+    eqsPropConfGrid.attach(eqsCountVerPadding2, 0, 3, 5, 1);
+    eqsPropConfGrid.attach(eqsCountVerPadding3, 0, 5, 5, 1);
+    eqsPropConfGrid.attach(eqsCountVerPadding4, 0, 7, 5, 1);
+    eqsPropConfGrid.attach(eqsCountVerPadding5, 0, 9, 5, 1);
+
+    eqsPropConfGrid.attach(eqsSetterProp, 0, 4);
+    eqsPropConfGrid.attach(eqsSetterEntry, 2, 4);
+    eqsPropConfGrid.attach(eqsSetterButton, 4, 4);
+
+    eqsPropConfGrid.attach(eqsZeroFillerButton, 0, 6);
+    eqsPropConfGrid.attach(eqsSetAsInput, 2, 6);
+
+    eqsPropConfGrid.attach(sleFormLabel, 0, 8);
 
     eqsSetterEntry.set_placeholder_text("1..10");
 
     eqsCountProp.set_width_chars(18);
     eqsSetterProp.set_width_chars(18);
 
-    eqsSetterButton.signal_clicked().connect(
-        sigc::mem_fun(
+    eqsSetterButton.signal_clicked().connect
+    (
+        sigc::mem_fun
+        (
               *this
-            , &LSEConfigurator::onEqsCountSetting
+            , &SLEConfigurator::onEqsCountSetting
         )
     );
 
-    eqsZeroFillerButton.signal_clicked().connect(
-        sigc::mem_fun(
+    eqsZeroFillerButton.signal_clicked().connect
+    (
+        sigc::mem_fun
+        (
               *this
-            , &LSEConfigurator::fillEmptyEntriesWithZeroes
+            , &SLEConfigurator::fillEmptyEntriesWithZeroes
         )
     );
 
-    eqsSetAsInput.signal_clicked().connect(
-        sigc::mem_fun(
+    eqsSetAsInput.signal_clicked().connect
+    (
+        sigc::mem_fun
+        (
               *this
-            , &LSEConfigurator::setEqsAsInput
+            , &SLEConfigurator::setEqsAsInput
         )
     );
 
@@ -587,19 +657,19 @@ std::string GetCoeffBFancyLabel(double eqIndex)
 
 #include <iostream>
 
-void LSEConfigurator::setEqsAsInput()
+void SLEConfigurator::setEqsAsInput()
 {
-    auto& lseDataV = *lseData.lock();
+    auto& sleDataV = *sleData.lock();
 
-    if (! lseDataV.IsEquationsCountSetted())
+    if (! sleDataV.IsEquationsCountSetted())
     {
         return;
     }
 
-    auto eqsCount = lseDataV.GetEquationsCount().value();
+    auto eqsCount = sleDataV.GetEquationsCount().value();
 
-    auto& A = lseDataV.GetVariablesCoefficientsRef().value().get();
-    auto& B = lseDataV.GetFreeCoefficientsRef().value().get();
+    auto& A = sleDataV.GetVariablesCoefficientsRef().value().get();
+    auto& B = sleDataV.GetFreeCoefficientsRef().value().get();
 
     for (std::size_t cellY = 0; cellY < eqsCount; cellY++)
     {
@@ -609,7 +679,8 @@ void LSEConfigurator::setEqsAsInput()
 
             if (! mayCoeffA.has_value())
             {
-                eqsConfStatus.set_text(
+                eqsConfStatus.set_text
+                (
                     std::format("Комірка {} не є числом", GetCoeffAFancyLabel(cellY, cellX))
                 );
                 return;
@@ -619,20 +690,22 @@ void LSEConfigurator::setEqsAsInput()
 
             if (! (-1'000 <= coeffA && coeffA <= 1'000))
             {
-                eqsConfStatus.set_text(
+                eqsConfStatus.set_text
+                (
                     std::format("Комірка {} не є в діапазоні [-1'000; 1'000]", GetCoeffAFancyLabel(cellY, cellX))
                 );
                 return;
             }
 
-            A.At(cellY, cellX) = coeffA;
+            A.At(cellY, cellX) = FloorToZeroWithPrecision(coeffA, 6);
         }
 
         auto mayCoeffB = ToNumber(freeCoeffsEntries[cellY].get_text());
 
         if (! mayCoeffB.has_value())
         {
-            eqsConfStatus.set_text(
+            eqsConfStatus.set_text
+            (
                 std::format("Комірка {} не є числом", GetCoeffBFancyLabel(cellY))
             );
             return;
@@ -642,23 +715,25 @@ void LSEConfigurator::setEqsAsInput()
 
         if (! (-10'000 <= coeffB && coeffB <= 10'000))
         {
-            eqsConfStatus.set_text(
+            eqsConfStatus.set_text
+            (
                 std::format("Комірка {} не є в діапазоні [-10'000; 10'000]", GetCoeffBFancyLabel(cellY))
             );
             return;
         }
 
-        B[cellY] = coeffB;
+        B[cellY] = FloorToZeroWithPrecision(coeffB, 6);
     }
 
-    eqsConfStatus.set_text(
+    eqsConfStatus.set_text
+    (
         std::format("Дана СЛАР встановлена {}", GetCurrentFormalTime())
     );
 
-    lseDataV.ConfirmData();
+    sleDataV.ConfirmData();
 }
 
-void LSEConfigurator::initializeEqsForm()
+void SLEConfigurator::initializeEqsForm()
 {
     eqsFormBox.pack_start(varsCoeffsGrid, Gtk::PACK_SHRINK);
     eqsFormBox.pack_start(freeCoeffsGrid, Gtk::PACK_SHRINK, 12);
@@ -666,7 +741,7 @@ void LSEConfigurator::initializeEqsForm()
     eqsFormBox.show_all_children();
 }
 
-void LSEConfigurator::onEqsCountSetting()
+void SLEConfigurator::onEqsCountSetting()
 {
     auto mayEqsCount = ToInteger(
         eqsSetterEntry.get_text()
@@ -695,17 +770,17 @@ void LSEConfigurator::onEqsCountSetting()
     createEqsForm(eqsCount);
 }
 
-void LSEConfigurator::createEqsForm(std::size_t eqsCount)
+void SLEConfigurator::createEqsForm(std::size_t eqsCount)
 {
-    varsCoeffsEntries = AllocArray2D<Gtk::Entry>(eqsCount, eqsCount);
+    varsCoeffsEntries = RTArray2D<Gtk::Entry>(eqsCount, eqsCount);
     freeCoeffsEntries = std::vector<Gtk::Entry>(eqsCount);
 
-    auto& lseDataV = *lseData.lock();
+    auto& sleDataV = *sleData.lock();
 
-    lseDataV.SetEquationsCount(eqsCount);
+    sleDataV.SetEquationsCount(eqsCount);
 
-    lseDataV.SetVariablesCoefficients(Matrix(eqsCount, eqsCount));
-    lseDataV.SetFreeCoefficients(Vector(eqsCount));
+    sleDataV.SetVariablesCoefficients(Matrix(eqsCount, eqsCount));
+    sleDataV.SetFreeCoefficients(Vector(eqsCount));
 
     for (std::size_t y = 0; y < eqsCount; y++)
     {
@@ -714,12 +789,14 @@ void LSEConfigurator::createEqsForm(std::size_t eqsCount)
             auto& newVarCoeff = varsCoeffsEntries.At(y, x);
             
             newVarCoeff = Gtk::Entry();
-            newVarCoeff.set_width_chars(3);
+            newVarCoeff.set_width_chars(5);
 
-            newVarCoeff.set_placeholder_text(
+            newVarCoeff.set_placeholder_text
+            (
                 GetCoeffAShortLabel(y, x)
             );
-            newVarCoeff.set_tooltip_text(
+            newVarCoeff.set_tooltip_text
+            (
                 GetCoeffAFancyLabel(y, x)
             );
 
@@ -731,10 +808,12 @@ void LSEConfigurator::createEqsForm(std::size_t eqsCount)
         newFreeCoeff = Gtk::Entry();
         newFreeCoeff.set_width_chars(5);
 
-        newFreeCoeff.set_placeholder_text(
+        newFreeCoeff.set_placeholder_text
+        (
             GetCoeffBShortLabel(y)
         );
-        newFreeCoeff.set_tooltip_text(
+        newFreeCoeff.set_tooltip_text
+        (
             GetCoeffBFancyLabel(y)
         );
 
@@ -748,17 +827,17 @@ void LSEConfigurator::createEqsForm(std::size_t eqsCount)
     freeCoeffsGrid.show();
 }
 
-void LSEConfigurator::removeEqsForm()
+void SLEConfigurator::removeEqsForm()
 {
-    auto& lseDataV = *lseData.lock();
+    auto& sleDataV = *sleData.lock();
 
-    if (! lseDataV.IsEquationsCountSetted())
+    if (! sleDataV.IsEquationsCountSetted())
     {
         return;
     }
 
-    std::size_t eqsCount = lseDataV.GetEquationsCount().value();
-    lseDataV.ClearData();
+    std::size_t eqsCount = sleDataV.GetEquationsCount().value();
+    sleDataV.ClearData();
 
     varsCoeffsGrid.hide();
     freeCoeffsGrid.hide();
@@ -771,20 +850,22 @@ void LSEConfigurator::removeEqsForm()
         freeCoeffsGrid.remove_column(0);
     }
 
-    varsCoeffsEntries = AllocArray2D<Gtk::Entry>();
+    varsCoeffsEntries = RTArray2D<Gtk::Entry>();
     freeCoeffsEntries = std::vector<Gtk::Entry>();
 }
 
-void LSEConfigurator::fillEmptyEntriesWithZeroes()
+void SLEConfigurator::fillEmptyEntriesWithZeroes()
 {
-    const auto& lseDataV = *lseData.lock();
+    constexpr auto formattedZero = "0";
 
-    if (! lseDataV.IsEquationsCountSetted())
+    const auto& sleDataV = *sleData.lock();
+
+    if (! sleDataV.IsEquationsCountSetted())
     {
         return;
     }
 
-    auto eqsCount = lseDataV.GetEquationsCount().value();
+    auto eqsCount = sleDataV.GetEquationsCount().value();
 
     for (std::size_t y = 0; y < eqsCount; y++)
     {
@@ -795,7 +876,7 @@ void LSEConfigurator::fillEmptyEntriesWithZeroes()
 
             if (origEntryInput == "")
             {
-                currentEntryOfMatrixA.set_text("0");
+                currentEntryOfMatrixA.set_text(formattedZero);
             }
         }
 
@@ -804,15 +885,15 @@ void LSEConfigurator::fillEmptyEntriesWithZeroes()
 
         if (origEntryInput == "")
         {
-            currentEntryOfVectorB.set_text("0");
+            currentEntryOfVectorB.set_text(formattedZero);
         }
     }
 }
 
-LSESolverUI::LSESolverUI()
+SLESolvePanel::SLESolvePanel()
 {
     set_label("Розв'язання СЛАР");
-    set_size_request(340, 300);
+    set_size_request(360, 300);
 
     add(solverRootBox);
 
@@ -827,19 +908,28 @@ LSESolverUI::LSESolverUI()
     solverRootBox.pack_start(solvingStatus);
     solverRootBox.pack_start(practicalTimeComplexity);
 
-    solveButton.signal_clicked().connect(
-        sigc::mem_fun(
+    solveButton.signal_clicked().connect
+    (
+        sigc::mem_fun
+        (
               *this
-            , &LSESolverUI::onSolvingProcess
+            , &SLESolvePanel::onSolvingProcess
         )
     );
 
     for (std::size_t methodIndex = 0; methodIndex < comboBoxMethodRecords.size(); methodIndex++)
     {
         auto currentOption = comboBoxMethodRecords[methodIndex];
-        comboBoxMethodsNames.append(
+
+        comboBoxMethodsNames.append
+        (
               std::to_string(methodIndex)
-            , std::format("{}\nСкладність:{}", currentOption.MethodName, currentOption.MethodPracticalItersComplexity)
+            , std::format
+            (
+                  "{}\nСкладність: {}"
+                , currentOption.GetMethodName()
+                , currentOption.GetMethodPracticalItersComplexity()
+            )
         );
     }
 
@@ -847,7 +937,21 @@ LSESolverUI::LSESolverUI()
     solverRootBox.show();
 }
 
-void LSESolverUI::onSolvingProcess()
+void SLESolvePanel::SetSLEInputData(std::weak_ptr<SLEInputData> sleInputData)
+{
+    this->sleInputData = sleInputData;
+}
+void SLESolvePanel::SetSLESolveData(std::weak_ptr<SLESolveData> sleSolveData)
+{
+    this->sleSolveData = sleSolveData;
+}
+
+void SLESolvePanel::SetSLESolveOutput(std::weak_ptr<SLESolveOutput> sleSolveOutput)
+{
+    this->sleSolveOutput = sleSolveOutput;
+}
+
+void SLESolvePanel::onSolvingProcess()
 {
     auto comboBoxMethodIndex = comboBoxMethodsNames.get_active_id();
 
@@ -857,23 +961,26 @@ void LSESolverUI::onSolvingProcess()
         return;
     }
 
-    auto lseInput = *lseInputData.lock();
+    auto sleInput = *sleInputData.lock();
 
-    if (! lseInput.IsDataConfirmed())
+    if (! sleInput.IsDataConfirmed())
     {
         solvingStatus.set_text("СЛАР ще не встановлена");
         return;
     }
 
-    auto eqsCount = lseInput.GetEquationsCount().value();
+    auto eqsCount = sleInput.GetEquationsCount().value();
 
-    auto& A = lseInput.GetVariablesCoefficientsRef().value().get();
-    auto& B = lseInput.GetFreeCoefficientsRef().value().get();
+    auto& A = sleInput.GetVariablesCoefficientsRef().value().get();
+    auto& B = sleInput.GetFreeCoefficientsRef().value().get();
 
-    auto solvingMethodP = LSESolverFactoryProduce(
-        comboBoxMethodRecords[
+    auto solvingMethodP = SLESolverFactoryProduce
+    (
+        comboBoxMethodRecords
+        [
            ToInteger(comboBoxMethodIndex).value()
-        ].SolvingMethodIndex
+        ]
+        .GetSolvingMethodIndex()
     );
 
     auto& solvingMethod = *solvingMethodP;
@@ -882,35 +989,37 @@ void LSESolverUI::onSolvingProcess()
     solvingMethod.SetVariablesCoefficients(A);
     solvingMethod.SetFreeCoefficients(B);
 
-    solvingMethod.SolveLSE();
+    solvingMethod.Solve();
 
-    auto& lseSolvesPlaceV = *lseSolvesPlace.lock();
+    auto& sleSolvesPlaceV = *sleSolveData.lock();
 
-    if (! solvingMethod.IsLSESoledSuccessfully().value())
+    if (! solvingMethod.IsSolvedSuccessfully().value())
     {
-        lseSolveOutput.lock()->ClearSolve();
+        sleSolveOutput.lock()->ClearSolve();
 
-        lseSolvesPlaceV.SetSolvingStatus(LSESolvingStatus::SolvedFailful);
+        sleSolvesPlaceV.SetSolvingStatus(SLESolvingStatus::SolvedFailful);
         solvingStatus.set_text("СЛАР не можливо вирішити цим методом");
         practicalTimeComplexity.set_text("");
         return;
     }
 
-    auto X = solvingMethod.GetVariablesSolvesOnce().value();
+    auto X = solvingMethod.GetSolveOnce().value();
 
-    lseSolvesPlaceV.SetVarsSolve(std::move(X));
-    lseSolvesPlaceV.SetSolvingStatus(LSESolvingStatus::SolvedSuccessfully);
+    sleSolvesPlaceV.SetVarsSolve(std::move(X));
+    sleSolvesPlaceV.SetSolvingStatus(SLESolvingStatus::SolvedSuccessfully);
 
-    lseInput.ClearData();
+    sleInput.ClearData();
 
-    solvingStatus.set_text(
+    solvingStatus.set_text
+    (
         std::format("СЛАР вирішено {}", GetCurrentFormalTime())
     );
-    practicalTimeComplexity.set_text(
-        std::format("СЛАР вирішено за {} ітерацій", solvingMethod.GetTotalIterationsCount().value())
+    practicalTimeComplexity.set_text
+    (
+        std::format("СЛАР вирішено за {} ітерацій", solvingMethod.GetAlgoItersCount().value())
     );
 
-    lseSolveOutput.lock()->OutputSolve();
+    sleSolveOutput.lock()->OutputSolve();
 }
 
 // class GUISession
@@ -920,7 +1029,7 @@ GUISession::GUISession() = default;
 void GUISession::Init()
 {
     appWin.SetApplicationData(appData);
-    appWin.ReadyWindow();
+    appWin.Ready();
 }
 
 Gtk::Window& GUISession::GetWindowRef()

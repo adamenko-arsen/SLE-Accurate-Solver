@@ -1,26 +1,26 @@
 #!/usr/bin/env bash
 
-SRC='Sources'
-OBJ='Objects'
+TMP=Temp
+SRC=Sources
+OBJ=Objects
 EXE="Executable/Розв'язувач СЛАР.exe"
 
-EXE="Executable/Розв'язувач СЛАР.exe"
-
-CPP='g++'
+CPP=g++
 CPPFLAGS='-std=c++23 -Wall -Wextra'
-CPPOPT='-O0'
-CPPLIBS='$(pkg-config --cflags --libs gtkmm-3.0)'
-CPPLINK='-s'
+CPPOPT=-g
+CPPLIBS='-ISources $(pkg-config --cflags --libs gtkmm-3.0)'
+CPPLINK=-s
 
-LINK='g++'
+LINK=g++
 LINKFLAGS=''
+LINKRPATH='-Wl,-rpath,/mingw32/bin:/mingw64/bin'
 
-CPPLINT='cppcheck'
+CPPLINT=cppcheck
 CPPLINTFLAGS='--std=c++23 --enable=style,warning,performance,portability,missingInclude --inconclusive'
 
 build() {
     # create the object file structure excactly same as the source's one
-    rsync --include '*/' --exclude '*' "$SRC/" "$OBJ"
+    #find "$SOURCE" 
 
     find "$SRC" -type f -iname "*.cpp" | while read -r cpp;
     do
@@ -67,10 +67,14 @@ build() {
 
     # output a build command and run it.
     # find all object files recursively
-    cmd="\"$LINK\" $LINKFLAGS $(find "$OBJ" -iname '*.o' | xargs) -o \"$EXE\" $CPPLIBS"
+    cmd="\"$LINK\" $LINKFLAGS $LINKRPATH $(find "$OBJ" -iname '*.o' | xargs) -o \"$EXE\" $CPPLIBS"
 
     echo "$cmd"
     bash -c "$cmd"
+}
+
+touch() {
+    find "$SRC" -iname '*.cpp' -exec touch {} \;
 }
 
 lint() {
@@ -85,6 +89,7 @@ The list of available options:
  [Build/Run]
  - make build   -- build the most optimized release version
  - make run     -- run the normal way
+ - make touch   -- update the modify date of all sources
 
  [Other]
  - make lint    -- lint the sources
@@ -99,7 +104,12 @@ run() {
 }
 
 size() {
-    du -sh *
+    find "$SRC" \( -iname '*.cpp' -o -iname '*.hpp' \) -exec du -b {} \; > "$TMP/src-size"
+    find "$SRC" \( -iname '*.cpp' -o -iname '*.hpp' \) -exec wc -l {} \; | awk '{ print $1 }' > "$TMP/src-line"
+
+    s="$(paste "$TMP/src-line" "$TMP/src-size" | awk '{ print $2 "\t" $1 "\t" $3 }' | sort -rnk1)"
+
+    printf '[size]\t[lines]\t[file]\n%s\n' "$s"
 }
 
 case "$1" in
@@ -108,6 +118,9 @@ case "$1" in
     ;;
     run)
         run "${@:2}"
+    ;;
+    touch)
+        touch
     ;;
     size)
         size

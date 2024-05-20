@@ -2,7 +2,7 @@
 
 #include <cstdint>
 
-#include "../LSESolver.hpp"
+#include "../SLESolver.hpp"
 
 struct LUPDecResult
 {
@@ -10,7 +10,7 @@ struct LUPDecResult
     std::vector<std::size_t> P;
 };
 
-class LUPSolver : public LSESolver
+class LUPSolver : public SLESolver
 {
 public:
     ~LUPSolver() override = default;
@@ -32,5 +32,5 @@ private:
     static Vector solveX(const Matrix& U, const Vector& Y, IterationsCounter& itersCounter);
 
 protected:
-    SolvingResult SolveLSEInternal(Matrix&& A, Vector&& B) override;
+    SolvingResult SolveInternally(Matrix&& A, Vector&& B) override;
 };

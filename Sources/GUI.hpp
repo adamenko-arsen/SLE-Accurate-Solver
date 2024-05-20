@@ -1,8 +1,8 @@
 #pragma once
 
-#include "Vector.hpp"
-#include "Matrix.hpp"
-#include "AllocArray2D.inc.hpp"
+#include "Containers/AllocArray2D.inc.hpp"
+#include "Containers/Matrix.hpp"
+#include "Containers/Vector.hpp"
 
 #include <gtkmm.h>
 
@@ -10,12 +10,10 @@
 
 #include <memory>
 
-#define CLASS_CONST static constexpr
-
-class LSEInputData
+class SLEInputData
 {
 public:
-    LSEInputData();
+    SLEInputData();
 
     void ClearData();
 
@@ -70,15 +68,15 @@ private:
     bool isEqsCountSetted = false;
 };
 
-enum class LSESolvingStatus : uint8_t
+enum class SLESolvingStatus : uint8_t
 {
     Unsolved, SolvedSuccessfully, SolvedFailful
 };
 
-class LSESolveData
+class SLESolveData
 {
 public:
-    LSESolveData();
+    SLESolveData();
 
     void SetVarsSolve(auto&& x)
     {
@@ -87,12 +85,12 @@ public:
     std::optional<std::reference_wrapper<Vector>> GetSolveRef();
     std::optional<std::reference_wrapper<const Vector>> GetSolveRef() const;
 
-    void SetSolvingStatus(LSESolvingStatus lseSolvingStatus);
-    LSESolvingStatus GetSolvingStatus() const noexcept;
+    void SetSolvingStatus(SLESolvingStatus sleSolvingStatus);
+    SLESolvingStatus GetSolvingStatus() const noexcept;
 
 private:
     Vector X{};
-    LSESolvingStatus solvingStatus = LSESolvingStatus::Unsolved;
+    SLESolvingStatus solvingStatus = SLESolvingStatus::Unsolved;
 };
 
 class ApplicationData
@@ -100,36 +98,43 @@ class ApplicationData
 public:
     ApplicationData() = default;
 
-    std::weak_ptr<LSEInputData> GetLSEInputDataRef()
+    std::weak_ptr<SLEInputData> GetSLEInputData()
     {
-        return std::weak_ptr<LSEInputData>(lseInputData);
+        return std::weak_ptr<SLEInputData>(sleInputData);
     }
-    std::weak_ptr<LSESolveData> GetLSEOutputDataRef()
+    std::weak_ptr<SLESolveData> GetSLEOutputData()
     {
-        return std::weak_ptr<LSESolveData>(lseSolves);
+        return std::weak_ptr<SLESolveData>(sleSolveData);
     }
 
 private:
-    std::shared_ptr<LSEInputData> lseInputData
-        = std::make_shared<LSEInputData>();
+    std::shared_ptr<SLEInputData> sleInputData
+        = std::make_shared<SLEInputData>();
 
-    std::shared_ptr<LSESolveData> lseSolves
-        = std::make_shared<LSESolveData>();
+    std::shared_ptr<SLESolveData> sleSolveData
+        = std::make_shared<SLESolveData>();
 };
 
-class LSEConfigurator : public Gtk::Frame
+class SLEConfigurator : public Gtk::Frame
 {
 public:
-    LSEConfigurator();
+    SLEConfigurator();
 
-    void SetLSEInputData(std::weak_ptr<LSEInputData> lseInputData);
+    void SetSLEInputData(std::weak_ptr<SLEInputData> sleInputData);
 
 private:
     Gtk::Box boxLayout{};
 
     Gtk::Grid eqsPropConfGrid{};
 
-    Gtk::Alignment eqsCountFirstHorAlign{};
+    Gtk::Alignment eqsCountHorPadding1{};
+    Gtk::Alignment eqsCountHorPadding2{};
+
+    Gtk::Alignment eqsCountVerPadding1{};
+    Gtk::Alignment eqsCountVerPadding2{};
+    Gtk::Alignment eqsCountVerPadding3{};
+    Gtk::Alignment eqsCountVerPadding4{};
+    Gtk::Alignment eqsCountVerPadding5{};
 
     Gtk::Label eqsConfStatus{"Невідомий статус"};
 
@@ -142,6 +147,8 @@ private:
 
     Gtk::Button eqsZeroFillerButton{"Заповнити пусті кліт. 0-ми"};
     Gtk::Button eqsSetAsInput{"Встановити дану СЛАР"};
+
+    Gtk::Label sleFormLabel{"Форма введення СЛАР:"};
 
     void setEqsAsInput();
 
@@ -158,28 +165,21 @@ private:
     Gtk::Grid varsCoeffsGrid{};
     Gtk::Grid freeCoeffsGrid{};
 
-    AllocArray2D<Gtk::Entry> varsCoeffsEntries{};
+    RTArray2D<Gtk::Entry> varsCoeffsEntries{};
     std::vector<Gtk::Entry>  freeCoeffsEntries{};
 
     void initializeEqsForm();
 
-    std::weak_ptr<LSEInputData> lseData{};
+    std::weak_ptr<SLEInputData> sleData{};
 };
 
-class LSESolveOutput : public Gtk::Frame
+class SLESolveOutput : public Gtk::Frame
 {
 public:
-    LSESolveOutput();
+    SLESolveOutput();
 
-    void SetLSEOutputDataRef(std::weak_ptr<LSESolveData> lseSolveData)
-    {
-        this->lseSolveData = lseSolveData;
-    }
-
-    void SetLSEInputDataRef(std::weak_ptr<LSEInputData> lseInputData)
-    {
-        this->lseInputData = lseInputData;
-    }
+    void SetSLEInputData(std::weak_ptr<SLEInputData> sleInputData);
+    void SetSLESolveData(std::weak_ptr<SLESolveData> sleSolveData);
 
     void OutputSolve();
     void ClearSolve();
@@ -188,39 +188,34 @@ private:
     Gtk::Box boxLayout{};
 
     Gtk::Label outputStatus{"Невідомий статус"};
+
+    Gtk::Label outputSolveLabel{"Вивести в файл:"};
     Gtk::Entry outputFileName{};
-    Gtk::Button outputButton{"Вивести в файл"};
+    Gtk::Button outputButton{"Спробувати записати"};
+
     Gtk::Label varsDesc{"Рішення СЛАР:"};
     Gtk::Label varsValues{""};
 
+    Gtk::Label outputGraphLabel{"Графічне вирішення:"};
     Gtk::DrawingArea outputGraph{};
 
     bool doRenderGraph = false;
 
     void saveSolve();
 
-    std::weak_ptr<LSEInputData> lseInputData{};
-    std::weak_ptr<LSESolveData> lseSolveData{};
+    std::weak_ptr<SLEInputData> sleInputData{};
+    std::weak_ptr<SLESolveData> sleSolveData{};
 };
 
-class LSESolverUI : public Gtk::Frame
+class SLESolvePanel : public Gtk::Frame
 {
 public:
-    LSESolverUI();
+    SLESolvePanel();
 
-    void SetLSEInputData(std::weak_ptr<LSEInputData> lseInputData)
-    {
-        this->lseInputData = lseInputData;
-    }
-    void SetLSESolvesPlace(std::weak_ptr<LSESolveData> lseSolvesPlace)
-    {
-        this->lseSolvesPlace = lseSolvesPlace;
-    }
+    void SetSLEInputData(std::weak_ptr<SLEInputData> sleInputData);
+    void SetSLESolveData(std::weak_ptr<SLESolveData> sleSolveData);
 
-    void SetLSESolveOutputUIRef(std::weak_ptr<LSESolveOutput> lseSolveOutput)
-    {
-        this->lseSolveOutput = lseSolveOutput;
-    }
+    void SetSLESolveOutput(std::weak_ptr<SLESolveOutput> sleSolveOutput);
 
 private:
     Gtk::Box solverRootBox{};
@@ -233,9 +228,9 @@ private:
 
     void onSolvingProcess();
 
-    std::weak_ptr<LSEInputData> lseInputData;
-    std::weak_ptr<LSESolveData> lseSolvesPlace;
-    std::weak_ptr<LSESolveOutput> lseSolveOutput;
+    std::weak_ptr<SLEInputData> sleInputData;
+    std::weak_ptr<SLESolveData> sleSolveData;
+    std::weak_ptr<SLESolveOutput> sleSolveOutput;
 };
 
 class ApplicationWindow : public Gtk::Window
@@ -245,18 +240,14 @@ public:
 
     void SetApplicationData(std::weak_ptr<ApplicationData> appData);
 
-    void ReadyWindow();
+    void Ready();
 
 private:
-    CLASS_CONST auto windowTitle = "Розв'язальник СЛАР";
-    CLASS_CONST auto windowSize = std::pair(1000, 600);
-    CLASS_CONST auto windowBorderWidth = 10;
-
     Gtk::Fixed fixedLayout;
 
-    LSEConfigurator lseConfigurator;
-    LSESolverUI     lseSolver;
-    std::shared_ptr<LSESolveOutput> lseSolveOutput = std::make_shared<LSESolveOutput>();
+    SLEConfigurator sleConfigurator;
+    SLESolvePanel     sleSolver;
+    std::shared_ptr<SLESolveOutput> sleSolveOutput = std::make_shared<SLESolveOutput>();
 
     void initializeWindowHead();
     void initializeWidgets();

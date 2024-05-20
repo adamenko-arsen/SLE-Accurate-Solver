@@ -210,7 +210,7 @@ Vector LUPSolver::solveX(const Matrix& U, const Vector& Y, IterationsCounter& it
     return X;
 }
 
-SolvingResult LUPSolver::SolveLSEInternal(Matrix&& A, Vector&& B)
+SolvingResult LUPSolver::SolveInternally(Matrix&& A, Vector&& B)
 {
     IterationsCounter itersCounter{};
 

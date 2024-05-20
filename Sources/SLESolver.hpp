@@ -1,7 +1,7 @@
 #pragma once
 
-#include "Vector.hpp"
-#include "Matrix.hpp"
+#include "Containers/Matrix.hpp"
+#include "Containers/Vector.hpp"
 
 #include <cstdint>
 
@@ -52,59 +52,46 @@ private:
     std::size_t itersCount = 0;
 };
 
-enum class BaseStatus : bool
-{
-    Success, Error
-};
-
-class LSESolver
+class SLESolver
 {
 public:
-    LSESolver();
-    virtual ~LSESolver();
+    SLESolver();
+    virtual ~SLESolver();
 
-    BaseStatus SetEquationsCount(std::size_t equationsCount);
-    BaseStatus SetVariablesCoefficients(auto&& varsCoeffsMatrix)
+    void SetEquationsCount(std::size_t equationsCount);
+    void SetVariablesCoefficients(auto&& varsCoeffsMatrix)
     {
-        using enum BaseStatus;
-
         if (! varsCoeffsMatrix.IsSquare())
         {
-            return Error;
+            return;
         }
         if (! (varsCoeffsMatrix.TryGetEdgeSize() == equationsCount))
         {
-            return Error;
+            return;
         }
 
         this->varsCoeffsMatrix = std::forward<decltype(varsCoeffsMatrix)>(varsCoeffsMatrix);
-
-        return Success;
     }
 
-    BaseStatus SetFreeCoefficients(auto&& freeCoeffsVector)
+    void SetFreeCoefficients(auto&& freeCoeffsVector)
     {
-        using enum BaseStatus;
-
         if (! (freeCoeffsVector.Size() == equationsCount))
         {
-            return Error;
+            return;
         }
 
         this->freeCoeffsVector = std::forward<decltype(freeCoeffsVector)>(freeCoeffsVector);
-
-        return Success;
     }
 
-    void SolveLSE();
+    void Solve();
 
-    std::optional<bool> IsLSESoledSuccessfully() const;
-    std::optional<Vector> GetVariablesSolvesOnce();
+    std::optional<bool> IsSolvedSuccessfully() const;
+    std::optional<Vector> GetSolveOnce();
 
-    std::optional<std::size_t> GetTotalIterationsCount();
+    std::optional<std::size_t> GetAlgoItersCount();
 
 protected:
-    virtual SolvingResult SolveLSEInternal(Matrix&& A, Vector&& B) = 0;
+    virtual SolvingResult SolveInternally(Matrix&& A, Vector&& B) = 0;
 
     std::size_t equationsCount = 0;
 

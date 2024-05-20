@@ -1,13 +1,13 @@
 #pragma once
 
-#include "../LSESolver.hpp"
+#include "../SLESolver.hpp"
 
 struct LDLDecResult
 {
     Matrix L, D;
 };
 
-class GaussHoletskiySolver : public LSESolver
+class GaussHoletskiySolver : public SLESolver
 {
 public:
     ~GaussHoletskiySolver() override = default;
@@ -28,5 +28,5 @@ private:
     static Vector solveX(const Matrix& L, const Vector& Z, IterationsCounter& itersCounter);
 
 protected:
-    SolvingResult SolveLSEInternal(Matrix&& A, Vector&& B);
+    SolvingResult SolveInternally(Matrix&& A, Vector&& B);
 };

@@ -1,9 +1,15 @@
+#pragma once
+
+#include <cstdio>
+
+#include <vector>
+
 template<typename T>
-class AllocArray2D
+class RTArray2D
 {
 public:
-    AllocArray2D() = default;
-    explicit AllocArray2D(std::size_t width, std::size_t height)
+    RTArray2D() = default;
+    explicit RTArray2D(std::size_t width, std::size_t height)
     {
         this->width = width;
         this->height = height;

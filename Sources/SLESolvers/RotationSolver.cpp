@@ -1,6 +1,6 @@
 #include "RotationSolver.hpp"
 
-#include "../AllocArray2D.inc.hpp"
+#include "../Containers/AllocArray2D.inc.hpp"
 
 #include <cmath>
 
@@ -9,13 +9,13 @@ bool RotationSolver::isCloseToZero(double x)
     return std::fabs(x) < 1e-9;
 }
 
-SolvingResult RotationSolver::SolveLSEInternal(Matrix&& A, Vector&& B)
+SolvingResult RotationSolver::SolveInternally(Matrix&& A, Vector&& B)
 {
     IterationsCounter itersCounter{};
 
     auto n = B.Size();
 
-    AllocArray2D<double> AB(n + 1, n);
+    RTArray2D<double> AB(n + 1, n);
 
     for (std::size_t y = 0; y < n; y++)
     {

@@ -95,11 +95,11 @@ private:
 };
 
 template<typename T>
-class AllocArray2D
+class RTArray2D
 {
 public:
-    AllocArray2D() = default;
-    explicit AllocArray2D(std::size_t width, std::size_t height)
+    RTArray2D() = default;
+    explicit RTArray2D(std::size_t width, std::size_t height)
     {
         this->width = width;
         this->height = height;
@@ -203,10 +203,10 @@ enum class BaseStatus : bool
     Success, Error
 };
 
-class LSESolver
+class SLESolver
 {
 public:
-    LSESolver() = default;
+    SLESolver() = default;
 
     BaseStatus SetEquationsCount(std::size_t equationsCount)
     {
@@ -260,13 +260,13 @@ public:
         return Success;
     }
 
-    void SolveLSE()
+    void Solve()
     {
         if (isSolvingApplied)
         {
             return;
         }
-        auto solvingResult = SolveLSEInternal(
+        auto solvingResult = SolveInternally(
               std::move(varsCoeffsMatrix)
             , std::move(freeCoeffsVector)
         );
@@ -280,7 +280,7 @@ public:
         }
     }
 
-    std::optional<bool> IsLSESoledSuccessfully() const
+    std::optional<bool> IsSolvedSuccessfully() const
     {
         if (! isSolvingApplied)
         {
@@ -294,10 +294,10 @@ public:
         return variablesValues;
     }
 
-    virtual ~LSESolver() = default;
+    virtual ~SLESolver() = default;
 
 protected:
-    virtual SolvingResult SolveLSEInternal(Matrix&& A, Vector&& B) = 0;
+    virtual SolvingResult SolveInternally(Matrix&& A, Vector&& B) = 0;
 
     std::size_t equationsCount = 0;
 
@@ -325,7 +325,7 @@ struct LUPDecResult
 };
 
 // TODO: implement...
-class LUPSolver : public LSESolver
+class LUPSolver : public SLESolver
 {
 public:
     ~LUPSolver() override = default;
@@ -509,7 +509,7 @@ private:
     }
 
 protected:
-    SolvingResult SolveLSEInternal(Matrix&& A, Vector&& B) override
+    SolvingResult SolveInternally(Matrix&& A, Vector&& B) override
     {
         auto mayLUPDecRes = lupDecompose(A);
 
@@ -539,7 +539,7 @@ struct LDLDecResult
 };
 
 // TODO: implement...
-class GaussHoletskiySolver : public LSESolver
+class GaussHoletskiySolver : public SLESolver
 {
 public:
     ~GaussHoletskiySolver() override = default;
@@ -704,7 +704,7 @@ private:
     }
 
 protected:
-    SolvingResult SolveLSEInternal(Matrix&& A, Vector&& B) override
+    SolvingResult SolveInternally(Matrix&& A, Vector&& B) override
     {
         auto mayLDL = ldlDecompose(A);
 
@@ -735,7 +735,7 @@ protected:
 };
 
 // TODO: implement...
-class RotationSolver : public LSESolver
+class RotationSolver : public SLESolver
 {
 public:
     ~RotationSolver() override = default;
@@ -747,11 +747,11 @@ private:
     }
 
 protected:
-    SolvingResult SolveLSEInternal(Matrix&& A, Vector&& B) override
+    SolvingResult SolveInternally(Matrix&& A, Vector&& B) override
     {
         auto n = B.Size();
 
-        AllocArray2D<double> AB(n + 1, n);
+        RTArray2D<double> AB(n + 1, n);
 
         for (std::size_t y = 0; y < n; y++)
         {
@@ -825,7 +825,7 @@ protected:
 
 int main()
 {
-    std::unique_ptr<LSESolver> solverUP{new GaussHoletskiySolver()};
+    std::unique_ptr<SLESolver> solverUP{new GaussHoletskiySolver()};
 
     auto& solver = *solverUP;
 
@@ -849,7 +849,7 @@ int main()
     solver.SetVariablesCoefficients(A);
     solver.SetFreeCoefficients(B);
 
-    solver.SolveLSE();
+    solver.Solve();
 
     auto X = solver.GetVariablesValuesUnsafely();
 

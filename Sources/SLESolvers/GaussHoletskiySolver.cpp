@@ -182,7 +182,7 @@ Vector GaussHoletskiySolver::solveX(const Matrix& L, const Vector& Z, Iterations
     return X;
 }
 
-SolvingResult GaussHoletskiySolver::SolveLSEInternal(Matrix&& A, Vector&& B)
+SolvingResult GaussHoletskiySolver::SolveInternally(Matrix&& A, Vector&& B)
 {
     IterationsCounter itersCounter{};
 

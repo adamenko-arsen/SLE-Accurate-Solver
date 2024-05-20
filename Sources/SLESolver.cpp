@@ -1,4 +1,6 @@
-#include "LSESolver.hpp"
+#include "SLESolver.hpp"
+
+#include <cstdio>
 
 // class IterationsCounter
 
@@ -37,43 +39,39 @@ Vector& SolvingResult::GetVarsValuesRef()
 
 SolvingResult& SolvingResult::SetItersCountChainly(std::size_t itersCount)
 {
-    itersCount = itersCount;
+    this->itersCount = itersCount;
 
     return *this;
 }
 
 // class LSESolver
 
-LSESolver::LSESolver() = default;
-LSESolver::~LSESolver() = default;
+SLESolver::SLESolver() = default;
+SLESolver::~SLESolver() = default;
 
-BaseStatus LSESolver::SetEquationsCount(std::size_t equationsCount)
+void SLESolver::SetEquationsCount(std::size_t equationsCount)
 {
-    using enum BaseStatus;
-
     if (isEquationsCountSetted)
     {
-        return Error;
+        return;
     }
 
     if (! (equationsCount >= 1))
     {
-        return Error;
+        return;
     }
 
     this->equationsCount = equationsCount;
     isEquationsCountSetted = true;
-
-    return Success;
 }
 
-void LSESolver::SolveLSE()
+void SLESolver::Solve()
 {
     if (isSolvingApplied)
     {
         return;
     }
-    auto solvingResult = SolveLSEInternal(
+    auto solvingResult = SolveInternally(
             std::move(varsCoeffsMatrix)
         , std::move(freeCoeffsVector)
     );
@@ -84,11 +82,12 @@ void LSESolver::SolveLSE()
     if (isLSESoledSuccessfully)
     {
         variablesValues = std::move(solvingResult.GetVarsValuesRef());
+
         totalIterationsCount = solvingResult.GetItersCount();
     }
 }
 
-std::optional<bool> LSESolver::IsLSESoledSuccessfully() const
+std::optional<bool> SLESolver::IsSolvedSuccessfully() const
 {
     if (! isSolvingApplied)
     {
@@ -97,7 +96,7 @@ std::optional<bool> LSESolver::IsLSESoledSuccessfully() const
     return isLSESoledSuccessfully;
 }
 
-std::optional<Vector> LSESolver::GetVariablesSolvesOnce()
+std::optional<Vector> SLESolver::GetSolveOnce()
 {
     if (! (isLSESoledSuccessfully && isSolvesKeeped))
     {
@@ -108,7 +107,7 @@ std::optional<Vector> LSESolver::GetVariablesSolvesOnce()
     return std::move(variablesValues);
 }
 
-std::optional<std::size_t> LSESolver::GetTotalIterationsCount()
+std::optional<std::size_t> SLESolver::GetAlgoItersCount()
 {
     if (! (isSolvingApplied && isLSESoledSuccessfully))
     {
