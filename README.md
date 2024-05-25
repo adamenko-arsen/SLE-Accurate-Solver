@@ -1,6 +1,6 @@
 # About
 
-This program solves systems of linear equations by the different accurate methods. This project has given to me and chose by me as a course work (KPI, 1st course, 2nd term).
+This program solves systems of linear equations (SLE) by the different accurate methods sized from 1 to 10 inclusively. This project has given to me and chose by me as a course work (KPI, 1st course, 2nd term).
 
 # Main
 
@@ -12,12 +12,12 @@ This program solves systems of linear equations by the different accurate method
 
 ## Features
 
-- the opportunity to try to solve any SLE
+- the opportunity to try to solve any inputed system of linear equations
 - the opportunity to choose a solving method freely
-- The opportunity to output the solve of the manual typed or file inputed SLE
+- The opportunity to output the solve of SLE
 - the opportunity to output the 2D graphical representation of two linear equations and their solve
-- the ability to warn an user about his/her incorrect behaviour with this software
-- the ability to warn an user about impossibility of solving sort of inputed issues which cannot be performed (cannot solve SLE, cannot output to file, etc)
+- the ability to warn an user about his/her incorrectly typed entries
+- the ability to warn an user about impossibility of solving inputed SLE
 
 ## System requirements
 
@@ -57,18 +57,23 @@ This program solves systems of linear equations by the different accurate method
   </tr>
 </table>
 
-## Building
+## Development
 
 The project can be controlled broadly by the script `make.sh`.
 
 To build the project, run the command below:
 ```sh
-$ make.sh build
+$ ./make.sh build
 ```
 
 Then you can execute by running the command below:
 ```sh
-$ make.sh run
+$ ./make.sh run
+```
+
+Type this one to get all options:
+```sh
+$ ./make.sh help
 ```
 
 Before the moment you want to build or run the project, read the project's environmental requirements below.
@@ -76,9 +81,9 @@ Before the moment you want to build or run the project, read the project's envir
 ### Languages
 
 <table>
-  <th>
+  <tr>
     <td>Name</td> <td>Version</td> <td>Purpose</td>
-  </th>
+  </tr>
   <tr>
     <td>C++</td> <td>C++23</td> <td>the program's main language</td>
   <tr>
@@ -90,9 +95,9 @@ Before the moment you want to build or run the project, read the project's envir
 ### Libraries
 
 <table>
-  <th>
+  <tr>
     <td>Name</td> <td>Version</td> <td>Purpose</td>
-  </th>
+  </tr>
   <tr>
     <td>GTKMM</td> <td>3.0</td> <td>for the program's simple GUI</td>
   <tr>
