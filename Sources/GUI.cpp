@@ -189,6 +189,8 @@ void SLESolveShower::SetSLESolveData(std::weak_ptr<SLESolveData> sleSolveData)
     this->sleSolveData = sleSolveData;
 }
 
+#include <iostream>
+
 SLESolveShower::SLESolveShower()
 {
     set_label("Виведення рішень СЛАР");
@@ -259,12 +261,12 @@ SLESolveShower::SLESolveShower()
             const auto A = sleInputData.GetVariablesCoefficientsRef().value().get();
             const auto B = sleInputData.GetFreeCoefficientsRef().value().get();
 
-            const auto coeffA1 = PutNumberToBounds(A.At(0, 0), 0.01, 100);
-            const auto coeffB1 = PutNumberToBounds(A.At(0, 1), 0.01, 100);
+            const auto coeffA1 = A.At(0, 0);
+            const auto coeffB1 = A.At(0, 1);
             const auto coeffC1 = B[0];
 
-            const auto coeffA2 = PutNumberToBounds(A.At(1, 0), 0.01, 100);
-            const auto coeffB2 = PutNumberToBounds(A.At(1, 1), 0.01, 100);
+            const auto coeffA2 = A.At(1, 0);
+            const auto coeffB2 = A.At(1, 1);
             const auto coeffC2 = B[1];
 
             const auto solves = sleSolveData.GetSolveRef().value().get();
@@ -284,17 +286,19 @@ SLESolveShower::SLESolveShower()
                 std::fabs(solveX), std::fabs(solveY)
             );
 
-            const double pixelsToValueScale = (std::min(width, height) / 2) / maxSolvedVarValue / 3;
+            const double valueToPixelsScale = std::min(10e10, (std::min(width, height) / 2) / maxSolvedVarValue / 3);
 
             // Draw major and minor lines:
-            const double minorLinesPower = std::floor(Logarithm(maxSolvedVarValue, 10));
-            const double majorLinesPower = std::floor(Logarithm(10 * maxSolvedVarValue, 10));
+            const double maxSolvedVarValueMinLimited = std::max(10e-9, maxSolvedVarValue);
+
+            const double minorLinesPower = std::floor(Logarithm(maxSolvedVarValueMinLimited, 10));
+            const double majorLinesPower = std::floor(Logarithm(10 * maxSolvedVarValueMinLimited, 10));
 
             const double minorLinesValueStep = std::pow(10, minorLinesPower);
             const double majorLinesValueStep = std::pow(10, majorLinesPower);
 
-            const double minorLinesPixelsStep = minorLinesValueStep * pixelsToValueScale;
-            const double majorLinesPixelsStep = majorLinesValueStep * pixelsToValueScale;
+            const double minorLinesPixelsStep = minorLinesValueStep * valueToPixelsScale;
+            const double majorLinesPixelsStep = majorLinesValueStep * valueToPixelsScale;
 
             const double minorLinesCountByX = std::ceil((width / 2) / minorLinesPixelsStep) * minorLinesPixelsStep;
             const double minorLinesCountByY = std::ceil((height / 2) / minorLinesPixelsStep) * minorLinesPixelsStep;
@@ -343,23 +347,31 @@ SLESolveShower::SLESolveShower()
             canvas->line_to(centerX, height);
             canvas->stroke();
 
-            const double coeffK1 = -coeffA1 / coeffB1;
+            const double coeffK1 = PutNumberToBounds(-coeffA1 / coeffB1, -100, 100);
             const double coeffBase1 = coeffC1 / coeffB1;
 
-            const double coeffK2 = -coeffA2 / coeffB2;
+            const double coeffK2 = PutNumberToBounds(-coeffA2 / coeffB2, -100, 100);
             const double coeffBase2 = coeffC2 / coeffB2;
 
             // Draw the first line
             canvas->set_source_rgb(1.0, 0.0, 0.0);
-            canvas->move_to(0,     centerY - (-centerX * coeffK1 + coeffBase1 * pixelsToValueScale));
-            canvas->line_to(width, centerY - (centerX * coeffK1 + coeffBase1 * pixelsToValueScale));
+            canvas->move_to(0,     centerY - (-centerX * coeffK1 + coeffBase1 * valueToPixelsScale));
+            canvas->line_to(width, centerY - (centerX * coeffK1 + coeffBase1 * valueToPixelsScale));
             canvas->stroke();
+
+            std::cout << "------------------" << std::endl;
+
+            std::cout << centerY - (-centerX * coeffK1 + coeffBase1 * valueToPixelsScale) << std::endl;
+            std::cout << centerY - (centerX * coeffK1 + coeffBase1 * valueToPixelsScale) << std::endl;
 
             // Draw the second line
             canvas->set_source_rgb(0.0, 0.0, 1.0);
-            canvas->move_to(0,     centerY - (-centerX * coeffK2 + coeffBase2 * pixelsToValueScale));
-            canvas->line_to(width, centerY - (centerX * coeffK2 + coeffBase2 * pixelsToValueScale));
+            canvas->move_to(0,     centerY - (-centerX * coeffK2 + coeffBase2 * valueToPixelsScale));
+            canvas->line_to(width, centerY - (centerX * coeffK2 + coeffBase2 * valueToPixelsScale));
             canvas->stroke();
+
+            std::cout << centerY - (coeffBase2 * valueToPixelsScale) << std::endl;
+            std::cout << centerY - (coeffBase2 * valueToPixelsScale) << std::endl;
 
             // Draw X and Y axises text.
             canvas->set_font_size(12);
@@ -373,7 +385,7 @@ SLESolveShower::SLESolveShower()
 
             // Draw coordinate
             canvas->set_font_size(12);
-            canvas->move_to(centerX + solveX * pixelsToValueScale, centerY - solveY * pixelsToValueScale);
+            canvas->move_to(centerX + solveX * valueToPixelsScale, centerY - solveY * valueToPixelsScale);
             canvas->show_text("(x=" + std::to_string(solveX) + " y=" + std::to_string(solveY) + ")");
 
             // Draw minor and major lines scale
@@ -429,7 +441,7 @@ void SLESolveShower::OutputSolve()
 void SLESolveShower::ClearSolve()
 {
     outputStatus.set_text("Рішення неможливо отримати");
-    varsValues.set_text("Розв'язків немає");
+    varsValues.set_text("(розв'язків немає)");
 
     outputGraph.queue_draw();
     doRenderGraph = false;
@@ -460,45 +472,9 @@ void SLESolveShower::saveSolve()
     WriteToFile(outputFileName.get_text(), formattedSolves);
 }
 
-std::string FormatExecTime(double execTime)
-{
-    struct functions
-    {
-        static std::ptrdiff_t toInt(double x)
-        {
-            return (std::ptrdiff_t)(x);
-        }
-    };
-
-    constexpr double baseMax = 10;
-
-    if (execTime < 0)
-    {
-        return "(негативне значення)";
-    }
-    
-    if (execTime >= 10)
-    {
-        return std::to_string(functions::toInt(execTime)) + " с";
-    }
-    if (execTime >= (baseMax / 1'000))
-    {
-        return std::to_string(functions::toInt(execTime * 1'000)) + " мс";
-    }
-    if (execTime >= (baseMax / 1'000'000))
-    {
-        return std::to_string(functions::toInt(execTime * 1'000'000)) + " μс";
-    }
-    if (execTime >= (baseMax / 1'000'000'000))
-    {
-        return std::to_string(functions::toInt(execTime * 1'000'000'000)) + " нс";
-    }
-    return std::to_string(functions::toInt(execTime * 1'000'000'000'000)) + " пс";
-}
-
 void ApplicationWindow::initializeWindowHead()
 {
-    set_title("Розв'язальник СЛАР");
+    set_title("Розв'язувач СЛАР точними методами");
 
     set_default_size(1000, 600);
     set_resizable(false);
@@ -644,7 +620,7 @@ std::string GetCoeffAShortLabel(double y, double x)
 
 std::string GetCoeffAFancyLabel(double y, double x)
 {
-    return std::format("A[змінна={} рівн.={}]", x + 1, y + 1);
+    return std::format("A[змінна №{}, рівняння №{}]", x + 1, y + 1);
 }
 
 std::string GetCoeffBShortLabel(double eqIndex)
@@ -654,10 +630,8 @@ std::string GetCoeffBShortLabel(double eqIndex)
 
 std::string GetCoeffBFancyLabel(double eqIndex)
 {
-    return std::format("B[рівн.={}]", eqIndex + 1);
+    return std::format("B[рівняння №{}]", eqIndex + 1);
 }
-
-#include <iostream>
 
 void SLEConfigurator::setEqsAsInput()
 {
@@ -795,6 +769,7 @@ void SLEConfigurator::createSLEForm(std::size_t eqsCount)
             
             newVarCoeff = Gtk::Entry();
             newVarCoeff.set_width_chars(4);
+            newVarCoeff.set_max_length(16);
 
             newVarCoeff.set_placeholder_text
             (
@@ -809,8 +784,10 @@ void SLEConfigurator::createSLEForm(std::size_t eqsCount)
             auto& newOperatorAdd = varsCoeffsLabels.At(y, 2 * x + 1);
 
             newIndexedVar.set_text(std::format(" X{}", x + 1));
+            newIndexedVar.set_size_request(-1, 42);
+
             newOperatorAdd.set_text("+");
-            newOperatorAdd.set_size_request(24, -1);
+            newOperatorAdd.set_size_request(24, 42);
 
             varsCoeffsGrid.attach(newVarCoeff   , 3 * x, y);
             varsCoeffsGrid.attach(newIndexedVar , 3 * x + 1, y);
@@ -824,12 +801,14 @@ void SLEConfigurator::createSLEForm(std::size_t eqsCount)
         auto& newLEEquationMark = leEquationMarkLabels[y];
         newLEEquationMark = Gtk::Label();
         newLEEquationMark.set_text("=");
-        newLEEquationMark.set_size_request(32, 30);
+        newLEEquationMark.set_size_request(32, 42);
         eqMarksGrid.attach(newLEEquationMark, 0, y);
 
         auto& newFreeCoeff = freeCoeffsEntries[y];
         newFreeCoeff = Gtk::Entry();
         newFreeCoeff.set_width_chars(3);
+        newFreeCoeff.set_size_request(24, 42);
+        newFreeCoeff.set_max_length(16);
 
         newFreeCoeff.set_placeholder_text
         (

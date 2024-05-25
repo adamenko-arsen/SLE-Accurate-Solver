@@ -199,7 +199,7 @@ private:
     Gtk::Button outputButton{"Спробувати записати"};
 
     Gtk::Label varsDesc{"Рішення СЛАР:"};
-    Gtk::Label varsValues{""};
+    Gtk::Label varsValues{"(ще немає)"};
 
     Gtk::Label outputGraphLabel{"Графічне вирішення:"};
     Gtk::DrawingArea outputGraph{};

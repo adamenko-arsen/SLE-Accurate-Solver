@@ -48,10 +48,6 @@ def CholeskySolveY(L, B):
             lambda j: L[i][j] * Y[j]
         ))
 
-        print('>>', summ(0, i - 1, (
-            lambda j: L[i][j] * Y[j]
-        )))
-
     return Y
 
 def CholeskySolveZ(D, Y):
@@ -82,12 +78,6 @@ A = [
     [-6, -12,  18]
 ]
 B = [-13, -6, 24]
-
-# A = [
-#     [1, 2],
-#     [3, 4]
-# ]
-# B = [5, 6]
 
 LDL = CholeskyDec(A)
 
