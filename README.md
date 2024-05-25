@@ -1,6 +1,6 @@
 # About
 
-This program helps to solve system of linear equations by different accurate methods. This project has given for me as course work (KPI, 1st course, 2nd term).
+This program solves systems of linear equations by the different accurate methods. This project has given to me and chose by me as a course work (KPI, 1st course, 2nd term).
 
 # Main
 
@@ -71,10 +71,29 @@ Then you can execute by running the command below:
 $ make.sh run
 ```
 
-My personal C++ compiler:
-```
-$ g++ --version
-g++ (GCC) 14.1.1 20240507
-```
+Before the moment you want to build or run the project, read the project's environmental requirements below.
 
-The project C++ recommended version: `C++23`
+### Languages
+
+<table>
+  <th>
+    <td>Name</td> <td>Version</td> <td>Purpose</td>
+  </th>
+  <tr>
+    <td>C++</td> <td>C++23</td> <td>the program's main language</td>
+  <tr>
+  <tr>
+    <td>Bash</td> <td>5.2.26</td> <td>managing the project</td>
+  <tr>
+</table>
+
+### Libraries
+
+<table>
+  <th>
+    <td>Name</td> <td>Version</td> <td>Purpose</td>
+  </th>
+  <tr>
+    <td>GTKMM</td> <td>3.0</td> <td>for the program's simple GUI</td>
+  <tr>
+</table>
