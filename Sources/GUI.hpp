@@ -264,7 +264,7 @@ public:
     GUISession();
 
     void Init();
-    Gtk::Window& GetWindowRef();
+    ApplicationWindow& GetWindowRef();
 
 private:
     ApplicationWindow appWin{};

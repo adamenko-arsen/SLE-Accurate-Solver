@@ -8,7 +8,6 @@ bool WriteToFile(const std::string& outputFileName, const std::string& newConten
 
     if (! (outputHandler != NULL))
     {
-        fclose(outputHandler);
         return false;
     }
 
@@ -28,8 +27,6 @@ std::optional<std::string> ReadFromFile(const std::string& inputFileName)
 
     if (! (inputHandler != NULL))
     {
-        fclose(inputHandler);
-
         return std::nullopt;
     }
 

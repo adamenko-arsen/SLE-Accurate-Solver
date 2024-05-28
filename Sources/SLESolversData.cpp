@@ -4,9 +4,9 @@
 #include "SLESolvers/GaussHoletskiySolver.hpp"
 #include "SLESolvers/RotationSolver.hpp"
 
-std::unique_ptr<SLESolver> SLESolverFactoryProduce(LSESolvingMethodIndex solverIndex)
+std::unique_ptr<SLESolver> SLESolverFactoryProduce(SLESolvingMethodIndex solverIndex)
 {
-    using enum LSESolvingMethodIndex;
+    using enum SLESolvingMethodIndex;
 
     std::unique_ptr<SLESolver> abstractSolver{};
 
@@ -30,7 +30,7 @@ std::unique_ptr<SLESolver> SLESolverFactoryProduce(LSESolvingMethodIndex solverI
     return abstractSolver;
 }
 
-LSESolvingMethodIndex ComboBoxMethodRecord::GetSolvingMethodIndex() const noexcept
+SLESolvingMethodIndex ComboBoxMethodRecord::GetSolvingMethodIndex() const noexcept
 {
     return solvingMethodIndex;
 }
@@ -45,7 +45,7 @@ const std::string& ComboBoxMethodRecord::GetMethodPracticalItersComplexity() con
 
 std::vector<ComboBoxMethodRecord> comboBoxMethodRecords =
 {
-      ComboBoxMethodRecord(LSESolvingMethodIndex::LUP            , "LUP-метод"              , "1/3*n^3 + 9/2*n^2 + 19/6*n")
-    , ComboBoxMethodRecord(LSESolvingMethodIndex::GaussHoletskiy , "Метод Гауса-Холецького" , "1/6*n^3 + 5/2*n^2 + 7/3*n")
-    , ComboBoxMethodRecord(LSESolvingMethodIndex::Rotation       , "Метод обертання"        , "1/3*n^3 + 5/2*n^2 + 1/6*n")
+      ComboBoxMethodRecord(SLESolvingMethodIndex::LUP            , "LUP-метод"              , "1/3*n^3 + 9/2*n^2 + 19/6*n")
+    , ComboBoxMethodRecord(SLESolvingMethodIndex::GaussHoletskiy , "Метод Гауса-Холецького" , "1/6*n^3 + 5/2*n^2 + 7/3*n")
+    , ComboBoxMethodRecord(SLESolvingMethodIndex::Rotation       , "Метод обертання"        , "1/3*n^3 + 5/2*n^2 + 1/6*n")
 };

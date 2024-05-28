@@ -359,19 +359,11 @@ SLESolveShower::SLESolveShower()
             canvas->line_to(width, centerY - (centerX * coeffK1 + coeffBase1 * valueToPixelsScale));
             canvas->stroke();
 
-            std::cout << "------------------" << std::endl;
-
-            std::cout << centerY - (-centerX * coeffK1 + coeffBase1 * valueToPixelsScale) << std::endl;
-            std::cout << centerY - (centerX * coeffK1 + coeffBase1 * valueToPixelsScale) << std::endl;
-
             // Draw the second line
             canvas->set_source_rgb(0.0, 0.0, 1.0);
             canvas->move_to(0,     centerY - (-centerX * coeffK2 + coeffBase2 * valueToPixelsScale));
             canvas->line_to(width, centerY - (centerX * coeffK2 + coeffBase2 * valueToPixelsScale));
             canvas->stroke();
-
-            std::cout << centerY - (coeffBase2 * valueToPixelsScale) << std::endl;
-            std::cout << centerY - (coeffBase2 * valueToPixelsScale) << std::endl;
 
             // Draw X and Y axises text.
             canvas->set_font_size(12);
@@ -1040,7 +1032,7 @@ void GUISession::Init()
     appWin.Ready();
 }
 
-Gtk::Window& GUISession::GetWindowRef()
+ApplicationWindow& GUISession::GetWindowRef()
 {
     return appWin;
 }

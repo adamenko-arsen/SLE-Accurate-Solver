@@ -71,8 +71,9 @@ void SLESolver::Solve()
     {
         return;
     }
-    auto solvingResult = SolveInternally(
-            std::move(varsCoeffsMatrix)
+    auto solvingResult = SolveInternally
+    (
+          std::move(varsCoeffsMatrix)
         , std::move(freeCoeffsVector)
     );
 

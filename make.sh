@@ -3,11 +3,11 @@
 TMP=Temp
 SRC=Sources
 OBJ=Objects
-EXE="Executable/Розв'язувач СЛАР.exe"
+EXE="Executable/SLEAccurateSolver.exe"
 
 CPP=g++
 CPPFLAGS='-std=c++23 -Wall -Wextra'
-CPPOPT=-O0
+CPPOPT=-O3
 CPPLIBS='-ISources $(pkg-config --cflags --libs gtkmm-3.0)'
 CPPLINK=-s
 
@@ -87,14 +87,14 @@ help() {
 The list of available options:
 
  [Build/Run]
- - make build   -- build the most optimized release version
- - make run     -- run the normal way
- - make touch   -- update the modify date of all sources
+ - make build    -- build the release version
+ - make run      -- run the program in the normal way
+ - make touch    -- update the modify date of all sources
 
  [Other]
- - make lint    -- lint the sources
- - make size    -- type the project's size
- - make help    -- type this manual
+ - make lint     -- lint the sources
+ - make size     -- type the sources' sizes' properties
+ - make help     -- type this manual
 
 EOF
 }
