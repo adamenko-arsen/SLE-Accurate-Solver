@@ -2,6 +2,9 @@
 
 #include "Convert.hpp"
 #include "Filesystem.hpp"
+#include "LinAlgUtility.hpp"
+#include "SLESolver.hpp"
+#include "SLESolversData.hpp"
 
 #include <cmath>
 
@@ -10,9 +13,6 @@
 #include <iomanip>
 #include <string>
 #include <utility>
-
-#include "SLESolver.hpp"
-#include "SLESolversData.hpp"
 
 #include <vector>
 
@@ -93,6 +93,11 @@ struct GUIUtilityFuncs final
         ss << std::scientific << std::setprecision(3) << n;
 
         return ss.str();
+    }
+
+    static bool IsDetCloseToZero(double x)
+    {
+        return std::fabs(x) < 10e-12;
     }
 };
 
@@ -1061,6 +1066,19 @@ void SLESolvePanel::onSolvingProcess()
     auto& A = sleInput.GetVariablesCoefficientsRef().value().get();
     auto& B = sleInput.GetFreeCoefficientsRef().value().get();
 
+    auto& sleSolvesPlaceV = *sleSolveData.lock();
+
+    if (GUIUtilityFuncs::IsDetCloseToZero(LinAlgUtility::Determinant(A)))
+    {
+        sleSolveOutput.lock()->ClearSolve();
+
+        sleSolvesPlaceV.SetSolvingStatus(SLESolvingStatus::SolvedFailful);
+        solvingStatus.set_text("Детермінант матриці коеф. рівен 0");
+
+        practicalTimeComplexity.set_text("");
+        return;
+    }
+
     auto solvingMethodP = SLESolverFactory::CreateNew
     (
         ComboBoxMethodRecords::ComboBoxMethodRecordsField
@@ -1077,8 +1095,6 @@ void SLESolvePanel::onSolvingProcess()
     solvingMethod.SetFreeCoefficients(B);
 
     solvingMethod.Solve();
-
-    auto& sleSolvesPlaceV = *sleSolveData.lock();
 
     if (! solvingMethod.IsSolvedSuccessfully().value())
     {
