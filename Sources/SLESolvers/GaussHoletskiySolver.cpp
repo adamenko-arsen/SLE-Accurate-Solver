@@ -55,8 +55,6 @@ bool GaussHoletskiySolver::isSolveNotAmbigious(const Vector& B, const Vector& X)
 
     for (std::size_t i = 0; i < B.Size(); i++)
     {
-        std::cout << B[i] << std::endl;
-
         if (! isCloseToZeroForAmbigiousCheck(B[i]))
         {
             return true;
@@ -65,8 +63,6 @@ bool GaussHoletskiySolver::isSolveNotAmbigious(const Vector& B, const Vector& X)
 
     for (std::size_t i = 0; i < X.Size(); i++)
     {
-        std::cout << X[i] << std::endl;
-
         if (! isCloseToZeroForAmbigiousCheck(X[i]))
         {
             return true;
