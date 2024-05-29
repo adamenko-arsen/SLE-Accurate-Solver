@@ -3,7 +3,7 @@
 #include <sstream>
 #include <string>
 
-std::optional<std::ptrdiff_t> ToInteger(const std::string& mayFormattedInt)
+std::optional<std::ptrdiff_t> Convert::ToInteger(const std::string& mayFormattedInt)
 {
     try
     {
@@ -15,7 +15,7 @@ std::optional<std::ptrdiff_t> ToInteger(const std::string& mayFormattedInt)
     }
 }
 
-std::optional<double> ToNumber(const std::string& str)
+std::optional<double> Convert::ToNumber(const std::string& str)
 {
     std::istringstream iss(str);
     iss.imbue(std::locale::classic());

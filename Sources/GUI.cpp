@@ -7,6 +7,7 @@
 
 #include <format>
 #include <fstream>
+#include <iomanip>
 #include <string>
 #include <utility>
 
@@ -15,50 +16,85 @@
 
 #include <vector>
 
-std::ptrdiff_t GetTimeSeconds()
+struct GUIUtilityFuncs final
 {
-    return time(NULL);
-}
+    GUIUtilityFuncs() = delete;
+    ~GUIUtilityFuncs() = delete;
 
-std::string GetCurrentFormalTime()
-{
-    auto secs = GetTimeSeconds();
-
-    return std::format
-    (
-          "{}:{}:{} UTC+00:00"
-        , secs / (60 * 60) % 24
-        , secs / 60 % 60
-        , secs % 60
-    );
-}
-
-double PutNumberToBounds(double value, double from, double to)
-{
-    if (! (from <= value))
+    static std::ptrdiff_t GetTimeSeconds()
     {
-        return from;
+        return time(NULL);
     }
-    if (! (value <= to))
+
+    static std::string GetCurrentFormalTime()
     {
-        return to;
+        auto secs = GetTimeSeconds();
+
+        return std::format
+        (
+            "{}:{}:{} UTC+00:00"
+            , secs / (60 * 60) % 24
+            , secs / 60 % 60
+            , secs % 60
+        );
     }
-    return value;
-}
 
-double Logarithm(double poweredValue, double base)
-{
-    return std::log(poweredValue) / std::log(base);
-}
+    static double PutNumberToBounds(double value, double from, double to)
+    {
+        if (! (from <= value))
+        {
+            return from;
+        }
+        if (! (value <= to))
+        {
+            return to;
+        }
+        return value;
+    }
 
-double FloorToZeroWithPrecision(double number, std::size_t maxDigits)
-{
-    bool isPositive = number >= 0;
+    static double Logarithm(double poweredValue, double base)
+    {
+        return std::log(poweredValue) / std::log(base);
+    }
 
-    auto multiplier = std::pow(10, maxDigits);
+    static double FloorToZeroWithPrecision(double number, std::size_t maxDigits)
+    {
+        bool isPositive = number >= 0;
 
-    return (isPositive ? 1 : -1) * (std::floor(std::fabs(number) * multiplier) / multiplier);
-}
+        auto multiplier = std::pow(10, maxDigits);
+
+        return (isPositive ? 1 : -1) * (std::floor(std::fabs(number) * multiplier) / multiplier);
+    }
+
+    static std::string GetCoeffAShortLabel(double y, double x)
+    {
+        return std::format("a{},{}", y + 1, x + 1);
+    }
+
+    static std::string GetCoeffAFancyLabel(double y, double x)
+    {
+        return std::format("A[змінна №{}, рівняння №{}]", x + 1, y + 1);
+    }
+
+    static std::string GetCoeffBShortLabel(double eqIndex)
+    {
+        return std::format("b{}", eqIndex + 1);
+    }
+
+    static std::string GetCoeffBFancyLabel(double eqIndex)
+    {
+        return std::format("B[рівняння №{}]", eqIndex + 1);
+    }
+
+    static std::string ToScientificForm(double n)
+    {
+        std::stringstream ss{};
+
+        ss << std::scientific << std::setprecision(3) << n;
+
+        return ss.str();
+    }
+};
 
 // class SLEInputData
 
@@ -189,8 +225,6 @@ void SLESolveShower::SetSLESolveData(std::weak_ptr<SLESolveData> sleSolveData)
     this->sleSolveData = sleSolveData;
 }
 
-#include <iostream>
-
 SLESolveShower::SLESolveShower()
 {
     set_label("Виведення рішень СЛАР");
@@ -198,10 +232,14 @@ SLESolveShower::SLESolveShower()
 
     add(boxLayout);
 
+    // set the rendering parameters
+
     boxLayout.set_border_width(10);
 
     boxLayout.set_orientation(Gtk::ORIENTATION_VERTICAL);
     boxLayout.set_spacing(10);
+
+    // render the main widgets here
 
     boxLayout.pack_start(outputStatus);
 
@@ -231,6 +269,8 @@ SLESolveShower::SLESolveShower()
     (
         [this_ = this](const Cairo::RefPtr<Cairo::Context>& canvas)
         {
+            // get width and height here
+
             auto& outputGraph = this_->outputGraph;
 
             const Gtk::Allocation canvasAlloc = outputGraph.get_allocation();
@@ -238,10 +278,12 @@ SLESolveShower::SLESolveShower()
             const std::ptrdiff_t width = canvasAlloc.get_width();
             const std::ptrdiff_t height = canvasAlloc.get_height();
 
+            // fill the background by default
             canvas->set_source_rgb(0, 0, 0);
             canvas->rectangle(0, 0, width, height);
             canvas->fill();
 
+            // if it is a mistake to draw the graph
             if (! this_->doRenderGraph)
             {
                 // Draw scary border
@@ -255,6 +297,7 @@ SLESolveShower::SLESolveShower()
                 return true;
             }
 
+            // obtaining the input and solve data of SLE
             const auto& sleInputData = *this_->sleInputData.lock();
             const auto& sleSolveData = *this_->sleSolveData.lock();
 
@@ -274,6 +317,7 @@ SLESolveShower::SLESolveShower()
             const auto solveX = solves[0];
             const auto solveY = solves[1];
 
+            // there is a start of rendering the graph
             if (! (sleInputData.GetEquationsCount().value() == 2))
             {
                 return true;
@@ -288,11 +332,11 @@ SLESolveShower::SLESolveShower()
 
             const double valueToPixelsScale = std::min(10e10, (std::min(width, height) / 2) / maxSolvedVarValue / 3);
 
-            // Draw major and minor lines:
+            // Draw major and minor lines
             const double maxSolvedVarValueMinLimited = std::max(10e-9, maxSolvedVarValue);
 
-            const double minorLinesPower = std::floor(Logarithm(maxSolvedVarValueMinLimited, 10));
-            const double majorLinesPower = std::floor(Logarithm(10 * maxSolvedVarValueMinLimited, 10));
+            const double minorLinesPower = std::floor(GUIUtilityFuncs::Logarithm(maxSolvedVarValueMinLimited, 10));
+            const double majorLinesPower = std::floor(GUIUtilityFuncs::Logarithm(10 * maxSolvedVarValueMinLimited, 10));
 
             const double minorLinesValueStep = std::pow(10, minorLinesPower);
             const double majorLinesValueStep = std::pow(10, majorLinesPower);
@@ -347,10 +391,11 @@ SLESolveShower::SLESolveShower()
             canvas->line_to(centerX, height);
             canvas->stroke();
 
-            const double coeffK1 = PutNumberToBounds(-coeffA1 / coeffB1, -100, 100);
+            // get lines' alternative coefficients
+            const double coeffK1 = GUIUtilityFuncs::PutNumberToBounds(-coeffA1 / coeffB1, -100, 100);
             const double coeffBase1 = coeffC1 / coeffB1;
 
-            const double coeffK2 = PutNumberToBounds(-coeffA2 / coeffB2, -100, 100);
+            const double coeffK2 = GUIUtilityFuncs::PutNumberToBounds(-coeffA2 / coeffB2, -100, 100);
             const double coeffBase2 = coeffC2 / coeffB2;
 
             // Draw the first line
@@ -372,19 +417,37 @@ SLESolveShower::SLESolveShower()
             canvas->set_source_rgb(1, 1, 1);
             canvas->show_text("Y (X2)");
 
-            canvas->move_to(width - 36, centerY + 12 * 1.5);
+            canvas->move_to(width - 42, centerY + 12 * 1.5);
             canvas->show_text("X (X1)");
 
+            auto intersectionDrawX = centerX + solveX * valueToPixelsScale;
+            auto intersectionDrawY = centerY - solveY * valueToPixelsScale;
+
+            // Draw the intersection
+            canvas->set_source_rgb(1, 1, 0);
+            canvas->rectangle(intersectionDrawX - 2, intersectionDrawY - 2, 4, 4);
+            canvas->stroke();
+
             // Draw coordinate
+            canvas->set_source_rgb(1, 1, 1);
             canvas->set_font_size(12);
-            canvas->move_to(centerX + solveX * valueToPixelsScale, centerY - solveY * valueToPixelsScale);
-            canvas->show_text("(x=" + std::to_string(solveX) + " y=" + std::to_string(solveY) + ")");
+            canvas->move_to(intersectionDrawX + 3, intersectionDrawY - 3);
+            canvas->show_text(
+                std::format(
+                      "(x={} y={})"
+                    , GUIUtilityFuncs::ToScientificForm(solveX)
+                    , GUIUtilityFuncs::ToScientificForm(solveY)
+                )
+            );
 
             // Draw minor and major lines scale
+            canvas->set_source_rgb(197.0/255, 172.0/255, 255.0/255);
             canvas->set_font_size(12);
-            canvas->move_to(18, 24);
+
+            canvas->move_to(18, 36);
             canvas->show_text("Масштаб ліній відліку змінних");
-            canvas->move_to(18, 24 + 12 + 2);
+    
+            canvas->move_to(18, 36 + 12 + 2);
             canvas->show_text(std::format("(10^{} = {})", minorLinesPower, std::pow(10, minorLinesPower)));
 
             // Draw pretty border
@@ -405,29 +468,41 @@ SLESolveShower::SLESolveShower()
 
 void SLESolveShower::OutputSolve()
 {
-    outputStatus.set_text(std::format("Рішення виведено {}", GetCurrentFormalTime()));
+    outputStatus.set_text(
+        std::format(
+              "Рішення виведено {}"
+            , GUIUtilityFuncs::GetCurrentFormalTime()
+        )
+    );
 
-    std::string varsValuesStr{};
 
     const auto& sleSolveDataV = *sleSolveData.lock();
     const auto& solves = (sleSolveDataV).GetSolveRef().value().get();
 
-    for (std::size_t solveIndex = 0; solveIndex < solves.Size(); solveIndex++)
+    auto eqsCount = solves.Size();
+
+    std::string varsValuesStr{};
+
+    if (eqsCount != 2)
     {
-        if (solveIndex != 0)
+        for (std::size_t solveIndex = 0; solveIndex < eqsCount; solveIndex++)
         {
-            varsValuesStr += "\n";
+            if (solveIndex != 0)
+            {
+                varsValuesStr += "\n";
+            }
+            varsValuesStr += std::format("X{}: {}", solveIndex + 1, solves[solveIndex]);
         }
-        varsValuesStr += std::format("X{}: {}", solveIndex + 1, solves[solveIndex]);
     }
-
-    varsValues.set_text(varsValuesStr);
-
-    if (solves.Size() == 2)
+    else
     {
+        varsValuesStr = std::format("X (X1, червона):\t{}\nY (X2, синя):\t\t{}", solves[0], solves[1]);
+
         doRenderGraph = true;
         outputGraph.queue_draw();
     }
+
+    varsValues.set_text(varsValuesStr);
 }
 
 void SLESolveShower::ClearSolve()
@@ -476,6 +551,7 @@ void ApplicationWindow::initializeWindowHead()
 
 void ApplicationWindow::SetApplicationData(std::weak_ptr<ApplicationData> appData)
 {
+    // Configure the relations between GUI modules
     sleConfigurator.SetSLEInputData(appData.lock()->GetSLEInputData());
 
     sleSolver.SetSLEInputData(appData.lock()->GetSLEInputData());
@@ -493,6 +569,7 @@ void ApplicationWindow::initializeWidgets()
 
     add(fixedLayout);
 
+    // Put GUI modules to absolute positions
     fixedLayout.put(sleConfigurator, 0, 0);
     fixedLayout.put(sleSolver, 1200 + 10, 0);
     fixedLayout.put(*sleSolveOutput, 1200 + 10, 260 + 10);
@@ -538,6 +615,8 @@ SLEConfigurator::SLEConfigurator()
 
 void SLEConfigurator::initializeEqsCount()
 {
+    // Attach a lot of children widgets to a cute grid of items
+
     eqsPropConfGrid.attach(eqsConfStatus, 0, 0, 3, 1);
 
     eqsPropConfGrid.attach(eqsCountProp, 0, 2);
@@ -605,26 +684,6 @@ void SLEConfigurator::initializeEqsCount()
     eqsPropConfGrid.show_all_children();
 }
 
-std::string GetCoeffAShortLabel(double y, double x)
-{
-    return std::format("a{},{}", y + 1, x + 1);
-}
-
-std::string GetCoeffAFancyLabel(double y, double x)
-{
-    return std::format("A[змінна №{}, рівняння №{}]", x + 1, y + 1);
-}
-
-std::string GetCoeffBShortLabel(double eqIndex)
-{
-    return std::format("b{}", eqIndex + 1);
-}
-
-std::string GetCoeffBFancyLabel(double eqIndex)
-{
-    return std::format("B[рівняння №{}]", eqIndex + 1);
-}
-
 void SLEConfigurator::setEqsAsInput()
 {
     auto& sleDataV = *sleData.lock();
@@ -643,13 +702,20 @@ void SLEConfigurator::setEqsAsInput()
     {
         for (std::size_t cellX = 0; cellX < eqsCount; cellX++)
         {
-            auto mayCoeffA = ToNumber(varsCoeffsEntries.At(cellY, cellX).get_text());
+            auto mayCoeffA = Convert::ToNumber
+            (
+                varsCoeffsEntries.At(cellY, cellX).get_text()
+            );
 
             if (! mayCoeffA.has_value())
             {
                 eqsConfStatus.set_text
                 (
-                    std::format("Комірка {} не є числом", GetCoeffAFancyLabel(cellY, cellX))
+                    std::format
+                    (
+                          "Комірка {} не є числом"
+                        , GUIUtilityFuncs::GetCoeffAFancyLabel(cellY, cellX)
+                    )
                 );
                 return;
             }
@@ -660,21 +726,29 @@ void SLEConfigurator::setEqsAsInput()
             {
                 eqsConfStatus.set_text
                 (
-                    std::format("Комірка {} не є в діапазоні [-1'000; 1'000]", GetCoeffAFancyLabel(cellY, cellX))
+                    std::format
+                    (
+                          "Комірка {} не є в діапазоні [-1'000; 1'000]"
+                        , GUIUtilityFuncs::GetCoeffAFancyLabel(cellY, cellX)
+                    )
                 );
                 return;
             }
 
-            A.At(cellY, cellX) = FloorToZeroWithPrecision(coeffA, 6);
+            A.At(cellY, cellX) = GUIUtilityFuncs::FloorToZeroWithPrecision(coeffA, 6);
         }
 
-        auto mayCoeffB = ToNumber(freeCoeffsEntries[cellY].get_text());
+        auto mayCoeffB = Convert::ToNumber(freeCoeffsEntries[cellY].get_text());
 
         if (! mayCoeffB.has_value())
         {
             eqsConfStatus.set_text
             (
-                std::format("Комірка {} не є числом", GetCoeffBFancyLabel(cellY))
+                std::format
+                (
+                      "Комірка {} не є числом"
+                    , GUIUtilityFuncs::GetCoeffBFancyLabel(cellY)
+                )
             );
             return;
         }
@@ -685,17 +759,25 @@ void SLEConfigurator::setEqsAsInput()
         {
             eqsConfStatus.set_text
             (
-                std::format("Комірка {} не є в діапазоні [-10'000; 10'000]", GetCoeffBFancyLabel(cellY))
+                std::format
+                (
+                      "Комірка {} не є в діапазоні [-10'000; 10'000]"
+                    , GUIUtilityFuncs::GetCoeffBFancyLabel(cellY)
+                )
             );
             return;
         }
 
-        B[cellY] = FloorToZeroWithPrecision(coeffB, 6);
+        B[cellY] = GUIUtilityFuncs::FloorToZeroWithPrecision(coeffB, 6);
     }
 
     eqsConfStatus.set_text
     (
-        std::format("Дана СЛАР встановлена {}", GetCurrentFormalTime())
+        std::format
+        (
+              "Дана СЛАР встановлена {}"
+            , GUIUtilityFuncs::GetCurrentFormalTime()
+        )
     );
 
     sleDataV.ConfirmData();
@@ -712,7 +794,8 @@ void SLEConfigurator::initializeEqsForm()
 
 void SLEConfigurator::onEqsCountSetting()
 {
-    auto mayEqsCount = ToInteger(
+    auto mayEqsCount = Convert::ToInteger
+    (
         eqsSetterEntry.get_text()
     );
 
@@ -743,7 +826,9 @@ void SLEConfigurator::createSLEForm(std::size_t eqsCount)
 {
     varsCoeffsEntries = RTArray2D<Gtk::Entry>(eqsCount, eqsCount);
     varsCoeffsLabels  = RTArray2D<Gtk::Label>(eqsCount * 2, eqsCount);
+
     leEquationMarkLabels = std::vector<Gtk::Label>(eqsCount);
+
     freeCoeffsEntries = std::vector<Gtk::Entry>(eqsCount);
 
     auto& sleDataV = *sleData.lock();
@@ -765,11 +850,11 @@ void SLEConfigurator::createSLEForm(std::size_t eqsCount)
 
             newVarCoeff.set_placeholder_text
             (
-                GetCoeffAShortLabel(y, x)
+                GUIUtilityFuncs::GetCoeffAShortLabel(y, x)
             );
             newVarCoeff.set_tooltip_text
             (
-                GetCoeffAFancyLabel(y, x)
+                GUIUtilityFuncs::GetCoeffAFancyLabel(y, x)
             );
 
             auto& newIndexedVar  = varsCoeffsLabels.At(y, 2 * x);
@@ -798,17 +883,17 @@ void SLEConfigurator::createSLEForm(std::size_t eqsCount)
 
         auto& newFreeCoeff = freeCoeffsEntries[y];
         newFreeCoeff = Gtk::Entry();
-        newFreeCoeff.set_width_chars(3);
+        newFreeCoeff.set_width_chars(6);
         newFreeCoeff.set_size_request(24, 42);
         newFreeCoeff.set_max_length(16);
 
         newFreeCoeff.set_placeholder_text
         (
-            GetCoeffBShortLabel(y)
+            GUIUtilityFuncs::GetCoeffBShortLabel(y)
         );
         newFreeCoeff.set_tooltip_text
         (
-            GetCoeffBFancyLabel(y)
+            GUIUtilityFuncs::GetCoeffBFancyLabel(y)
         );
 
         freeCoeffsGrid.attach(newFreeCoeff, 0, y);
@@ -917,6 +1002,8 @@ SLESolvePanel::SLESolvePanel()
         )
     );
 
+    auto& comboBoxMethodRecords = ComboBoxMethodRecords::ComboBoxMethodRecordsField;
+
     for (std::size_t methodIndex = 0; methodIndex < comboBoxMethodRecords.size(); methodIndex++)
     {
         auto currentOption = comboBoxMethodRecords[methodIndex];
@@ -974,11 +1061,11 @@ void SLESolvePanel::onSolvingProcess()
     auto& A = sleInput.GetVariablesCoefficientsRef().value().get();
     auto& B = sleInput.GetFreeCoefficientsRef().value().get();
 
-    auto solvingMethodP = SLESolverFactoryProduce
+    auto solvingMethodP = SLESolverFactory::CreateNew
     (
-        comboBoxMethodRecords
+        ComboBoxMethodRecords::ComboBoxMethodRecordsField
         [
-           ToInteger(comboBoxMethodIndex).value()
+           Convert::ToInteger(comboBoxMethodIndex).value()
         ]
         .GetSolvingMethodIndex()
     );
@@ -1012,11 +1099,19 @@ void SLESolvePanel::onSolvingProcess()
 
     solvingStatus.set_text
     (
-        std::format("СЛАР вирішено {}", GetCurrentFormalTime())
+        std::format
+        (
+              "СЛАР вирішено {}"
+            , GUIUtilityFuncs::GetCurrentFormalTime()
+        )
     );
     practicalTimeComplexity.set_text
     (
-        std::format("СЛАР вирішено за {} ітерацій", solvingMethod.GetAlgoItersCount().value())
+        std::format
+        (
+              "СЛАР вирішено за {} ітерацій"
+            , solvingMethod.GetAlgoItersCount().value()
+        )
     );
 
     sleSolveOutput.lock()->OutputSolve();

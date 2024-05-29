@@ -13,7 +13,13 @@ enum SLESolvingMethodIndex
     , Rotation       = 2
 };
 
-std::unique_ptr<SLESolver> SLESolverFactoryProduce(SLESolvingMethodIndex solverIndex);
+struct SLESolverFactory final
+{
+    SLESolverFactory() = delete;
+    ~SLESolverFactory() = delete;
+
+    static std::unique_ptr<SLESolver> CreateNew(SLESolvingMethodIndex solverIndex);
+};
 
 class ComboBoxMethodRecord
 {
@@ -38,4 +44,10 @@ private:
     std::string methodPracticalItersComplexity{"невідомо"};
 };
 
-extern std::vector<ComboBoxMethodRecord> comboBoxMethodRecords;
+struct ComboBoxMethodRecords final
+{
+    ComboBoxMethodRecords() = delete;
+    ~ComboBoxMethodRecords() = delete;
+
+    static std::vector<ComboBoxMethodRecord> ComboBoxMethodRecordsField;
+};

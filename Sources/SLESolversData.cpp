@@ -4,7 +4,7 @@
 #include "SLESolvers/GaussHoletskiySolver.hpp"
 #include "SLESolvers/RotationSolver.hpp"
 
-std::unique_ptr<SLESolver> SLESolverFactoryProduce(SLESolvingMethodIndex solverIndex)
+std::unique_ptr<SLESolver> SLESolverFactory::CreateNew(SLESolvingMethodIndex solverIndex)
 {
     using enum SLESolvingMethodIndex;
 
@@ -43,7 +43,7 @@ const std::string& ComboBoxMethodRecord::GetMethodPracticalItersComplexity() con
     return methodPracticalItersComplexity;
 }
 
-std::vector<ComboBoxMethodRecord> comboBoxMethodRecords =
+std::vector<ComboBoxMethodRecord> ComboBoxMethodRecords::ComboBoxMethodRecordsField =
 {
       ComboBoxMethodRecord(SLESolvingMethodIndex::LUP            , "LUP-метод"              , "1/3*n^3 + 9/2*n^2 + 19/6*n")
     , ComboBoxMethodRecord(SLESolvingMethodIndex::GaussHoletskiy , "Метод Гауса-Холецького" , "1/6*n^3 + 5/2*n^2 + 7/3*n")
