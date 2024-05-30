@@ -15,9 +15,9 @@ std::optional<std::ptrdiff_t> Convert::ToInteger(const std::string& mayFormatted
     }
 }
 
-std::optional<double> Convert::ToNumber(const std::string& str)
+std::optional<double> Convert::ToNumber(const std::string& mayFormattedNumber)
 {
-    std::istringstream iss(str);
+    std::istringstream iss(mayFormattedNumber);
     iss.imbue(std::locale::classic());
 
     double result;
@@ -29,4 +29,14 @@ std::optional<double> Convert::ToNumber(const std::string& str)
     }
 
     return result;
+}
+
+std::string Convert::NumberToString(double number)
+{
+    std::ostringstream oss;
+
+    oss.imbue(std::locale::classic());
+    oss << number;
+
+    return oss.str();
 }

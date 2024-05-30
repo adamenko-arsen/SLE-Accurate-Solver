@@ -3,8 +3,10 @@
 #include "Convert.hpp"
 #include "Filesystem.hpp"
 #include "LinAlgUtility.hpp"
+#include "Math.hpp"
 #include "SLESolver.hpp"
 #include "SLESolversData.hpp"
+#include "Time.hpp"
 
 #include <cmath>
 
@@ -21,83 +23,38 @@ struct GUIUtilityFuncs final
     GUIUtilityFuncs() = delete;
     ~GUIUtilityFuncs() = delete;
 
-    static std::ptrdiff_t GetTimeSeconds()
+    static std::string GetCoeffAShortLabel(std::size_t eqIndex, std::size_t varIndex)
     {
-        return time(NULL);
+        return std::format("a{},{}", eqIndex + 1, varIndex + 1);
     }
 
-    static std::string GetCurrentFormalTime()
+    static std::string GetCoeffAFancyLabel(std::size_t eqIndex, std::size_t varIndex)
     {
-        auto secs = GetTimeSeconds();
-
-        return std::format
-        (
-            "{}:{}:{} UTC+00:00"
-            , secs / (60 * 60) % 24
-            , secs / 60 % 60
-            , secs % 60
-        );
+        return std::format("A[рівняння №{}, змінна №{}]", eqIndex + 1, varIndex + 1);
     }
 
-    static double PutNumberToBounds(double value, double from, double to)
-    {
-        if (! (from <= value))
-        {
-            return from;
-        }
-        if (! (value <= to))
-        {
-            return to;
-        }
-        return value;
-    }
-
-    static double Logarithm(double poweredValue, double base)
-    {
-        return std::log(poweredValue) / std::log(base);
-    }
-
-    static double FloorToZeroWithPrecision(double number, std::size_t maxDigits)
-    {
-        bool isPositive = number >= 0;
-
-        auto multiplier = std::pow(10, maxDigits);
-
-        return (isPositive ? 1 : -1) * (std::floor(std::fabs(number) * multiplier) / multiplier);
-    }
-
-    static std::string GetCoeffAShortLabel(double y, double x)
-    {
-        return std::format("a{},{}", y + 1, x + 1);
-    }
-
-    static std::string GetCoeffAFancyLabel(double y, double x)
-    {
-        return std::format("A[змінна №{}, рівняння №{}]", x + 1, y + 1);
-    }
-
-    static std::string GetCoeffBShortLabel(double eqIndex)
+    static std::string GetCoeffBShortLabel(std::size_t eqIndex)
     {
         return std::format("b{}", eqIndex + 1);
     }
 
-    static std::string GetCoeffBFancyLabel(double eqIndex)
+    static std::string GetCoeffBFancyLabel(std::size_t eqIndex)
     {
         return std::format("B[рівняння №{}]", eqIndex + 1);
     }
 
-    static std::string ToScientificForm(double n)
+    static std::string ToShortScientificForm(double number)
     {
         std::stringstream ss{};
 
-        ss << std::scientific << std::setprecision(3) << n;
+        ss << std::scientific << std::setprecision(3) << number;
 
         return ss.str();
     }
 
-    static bool IsDetCloseToZero(double x)
+    static bool IsDetCloseToZero(double det)
     {
-        return std::fabs(x) < 10e-12;
+        return std::fabs(det) < 10e-12;
     }
 };
 
@@ -340,8 +297,8 @@ SLESolveShower::SLESolveShower()
             // Draw major and minor lines
             const double maxSolvedVarValueMinLimited = std::max(10e-9, maxSolvedVarValue);
 
-            const double minorLinesPower = std::floor(GUIUtilityFuncs::Logarithm(maxSolvedVarValueMinLimited, 10));
-            const double majorLinesPower = std::floor(GUIUtilityFuncs::Logarithm(10 * maxSolvedVarValueMinLimited, 10));
+            const double minorLinesPower = std::floor(Math::Logarithm(maxSolvedVarValueMinLimited, 10));
+            const double majorLinesPower = std::floor(Math::Logarithm(10 * maxSolvedVarValueMinLimited, 10));
 
             const double minorLinesValueStep = std::pow(10, minorLinesPower);
             const double majorLinesValueStep = std::pow(10, majorLinesPower);
@@ -397,10 +354,10 @@ SLESolveShower::SLESolveShower()
             canvas->stroke();
 
             // get lines' alternative coefficients
-            const double coeffK1 = GUIUtilityFuncs::PutNumberToBounds(-coeffA1 / coeffB1, -100, 100);
+            const double coeffK1 = Math::PutNumberToBounds(-coeffA1 / coeffB1, -100, 100);
             const double coeffBase1 = coeffC1 / coeffB1;
 
-            const double coeffK2 = GUIUtilityFuncs::PutNumberToBounds(-coeffA2 / coeffB2, -100, 100);
+            const double coeffK2 = Math::PutNumberToBounds(-coeffA2 / coeffB2, -100, 100);
             const double coeffBase2 = coeffC2 / coeffB2;
 
             // Draw the first line
@@ -440,8 +397,8 @@ SLESolveShower::SLESolveShower()
             canvas->show_text(
                 std::format(
                       "(x={} y={})"
-                    , GUIUtilityFuncs::ToScientificForm(solveX)
-                    , GUIUtilityFuncs::ToScientificForm(solveY)
+                    , GUIUtilityFuncs::ToShortScientificForm(solveX)
+                    , GUIUtilityFuncs::ToShortScientificForm(solveY)
                 )
             );
 
@@ -476,7 +433,7 @@ void SLESolveShower::OutputSolve()
     outputStatus.set_text(
         std::format(
               "Рішення виведено {}"
-            , GUIUtilityFuncs::GetCurrentFormalTime()
+            , Time::GetCurrentFormalTime()
         )
     );
 
@@ -545,7 +502,7 @@ void SLESolveShower::saveSolve()
         {
             formattedSolves += " ";
         }
-        formattedSolves += std::to_string(solves[solveIndex]);
+        formattedSolves += Convert::NumberToString(solves[solveIndex]);
     }
 
     WriteToFile(outputFileName.get_text(), formattedSolves);
@@ -748,7 +705,7 @@ void SLEConfigurator::setEqsAsInput()
                 return;
             }
 
-            A.At(cellY, cellX) = GUIUtilityFuncs::FloorToZeroWithPrecision(coeffA, 6);
+            A.At(cellY, cellX) = Math::FloorWithPrecision(coeffA, 6);
         }
 
         auto mayCoeffB = Convert::ToNumber(freeCoeffsEntries[cellY].get_text());
@@ -781,7 +738,7 @@ void SLEConfigurator::setEqsAsInput()
             return;
         }
 
-        B[cellY] = GUIUtilityFuncs::FloorToZeroWithPrecision(coeffB, 6);
+        B[cellY] = Math::FloorWithPrecision(coeffB, 6);
     }
 
     eqsConfStatus.set_text
@@ -789,7 +746,7 @@ void SLEConfigurator::setEqsAsInput()
         std::format
         (
               "Дана СЛАР встановлена {}"
-            , GUIUtilityFuncs::GetCurrentFormalTime()
+            , Time::GetCurrentFormalTime()
         )
     );
 
@@ -1138,7 +1095,7 @@ void SLESolvePanel::onSolvingProcess()
         std::format
         (
               "СЛАР вирішено {}"
-            , GUIUtilityFuncs::GetCurrentFormalTime()
+            , Time::GetCurrentFormalTime()
         )
     );
     practicalTimeComplexity.set_text
