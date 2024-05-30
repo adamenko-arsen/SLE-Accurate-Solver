@@ -481,9 +481,9 @@ void SLESolveShower::OutputSolve()
     );
 
 
-    const auto& sleSolveDataV = *sleSolveData.lock();
-    const auto& solves = (sleSolveDataV).GetSolveRef().value().get();
+    const auto sleSolveDataSP = sleSolveData.lock();
 
+    const auto& solves = (*sleSolveDataSP).GetSolveRef().value().get();
     auto eqsCount = solves.Size();
 
     std::string varsValuesStr{};
@@ -527,16 +527,17 @@ void SLESolveShower::ClearSolve()
 
 void SLESolveShower::saveSolve()
 {
-    auto& sleSolveDataV = *sleSolveData.lock();
+    auto sleSolveDataSP = sleSolveData.lock();
+    auto& sleSolveData = *sleSolveDataSP;
 
-    if (sleSolveDataV.GetSolvingStatus() != SLESolvingStatus::SolvedSuccessfully)
+    if (sleSolveData.GetSolvingStatus() != SLESolvingStatus::SolvedSuccessfully)
     {
         return;
     }
 
     std::string formattedSolves = "";
 
-    const auto& solves = sleSolveDataV.GetSolveRef().value().get();
+    const auto& solves = sleSolveData.GetSolveRef().value().get();
 
     for (std::size_t solveIndex = 0; solveIndex < solves.Size(); solveIndex++)
     {
@@ -697,17 +698,18 @@ void SLEConfigurator::initializeEqsCount()
 
 void SLEConfigurator::setEqsAsInput()
 {
-    auto& sleDataV = *sleData.lock();
+    auto sleInputDataSP = sleData.lock();
+    auto& sleInputData = *sleInputDataSP;
 
-    if (! sleDataV.IsEquationsCountSetted())
+    if (! sleInputData.IsEquationsCountSetted())
     {
         return;
     }
 
-    auto eqsCount = sleDataV.GetEquationsCount().value();
+    auto eqsCount = sleInputData.GetEquationsCount().value();
 
-    auto& A = sleDataV.GetVariablesCoefficientsRef().value().get();
-    auto& B = sleDataV.GetFreeCoefficientsRef().value().get();
+    auto& A = sleInputData.GetVariablesCoefficientsRef().value().get();
+    auto& B = sleInputData.GetFreeCoefficientsRef().value().get();
 
     for (std::size_t cellY = 0; cellY < eqsCount; cellY++)
     {
@@ -791,7 +793,7 @@ void SLEConfigurator::setEqsAsInput()
         )
     );
 
-    sleDataV.ConfirmData();
+    sleInputData.ConfirmData();
 }
 
 void SLEConfigurator::initializeEqsForm()
@@ -842,12 +844,13 @@ void SLEConfigurator::createSLEForm(std::size_t eqsCount)
 
     freeCoeffsEntries = std::vector<Gtk::Entry>(eqsCount);
 
-    auto& sleDataV = *sleData.lock();
+    auto sleInputDataSP = sleData.lock();
+    auto& sleInputData = *sleInputDataSP;
 
-    sleDataV.SetEquationsCount(eqsCount);
+    sleInputData.SetEquationsCount(eqsCount);
 
-    sleDataV.SetVariablesCoefficients(Matrix(eqsCount, eqsCount));
-    sleDataV.SetFreeCoefficients(Vector(eqsCount));
+    sleInputData.SetVariablesCoefficients(Matrix(eqsCount, eqsCount));
+    sleInputData.SetFreeCoefficients(Vector(eqsCount));
 
     for (std::size_t y = 0; y < eqsCount; y++)
     {
@@ -921,15 +924,16 @@ void SLEConfigurator::createSLEForm(std::size_t eqsCount)
 
 void SLEConfigurator::removeSLEForm()
 {
-    auto& sleDataV = *sleData.lock();
+    auto sleInputDataSP = sleData.lock();
+    auto& sleInputData = *sleInputDataSP;
 
-    if (! sleDataV.IsEquationsCountSetted())
+    if (! sleInputData.IsEquationsCountSetted())
     {
         return;
     }
 
-    std::size_t eqsCount = sleDataV.GetEquationsCount().value();
-    sleDataV.ClearData();
+    std::size_t eqsCount = sleInputData.GetEquationsCount().value();
+    sleInputData.ClearData();
 
     varsCoeffsGrid.hide();
     eqMarksGrid.hide();
@@ -954,14 +958,15 @@ void SLEConfigurator::fillEmptyEntriesWithZeroes()
 {
     constexpr auto formattedZero = "0";
 
-    const auto& sleDataV = *sleData.lock();
+    const auto sleInputDataSP = sleData.lock();
+    const auto& sleInputData = *sleInputDataSP;
 
-    if (! sleDataV.IsEquationsCountSetted())
+    if (! sleInputData.IsEquationsCountSetted())
     {
         return;
     }
 
-    auto eqsCount = sleDataV.GetEquationsCount().value();
+    auto eqsCount = sleInputData.GetEquationsCount().value();
 
     for (std::size_t y = 0; y < eqsCount; y++)
     {
@@ -1051,6 +1056,7 @@ void SLESolvePanel::SetSLESolveOutput(std::weak_ptr<SLESolveShower> sleSolveOutp
 
 void SLESolvePanel::onSolvingProcess()
 {
+    // Get the selected method
     auto comboBoxMethodIndex = comboBoxMethodsNames.get_active_id();
 
     if (comboBoxMethodIndex == "")
@@ -1059,29 +1065,33 @@ void SLESolvePanel::onSolvingProcess()
         return;
     }
 
-    auto sleInput = *sleInputData.lock();
+    // Check whether the SLE is confirmed
+    auto sleInputDataSP = sleInputData.lock();
+    auto& sleInputData = *sleInputDataSP;
 
-    if (! sleInput.IsDataConfirmed())
+    if (! sleInputData.IsDataConfirmed())
     {
         solvingStatus.set_text("СЛАР ще не встановлена");
         return;
     }
 
-    auto eqsCount = sleInput.GetEquationsCount().value();
+    // Get the essential information for the solving process
+    auto eqsCount = sleInputData.GetEquationsCount().value();
 
-    auto& A = sleInput.GetVariablesCoefficientsRef().value().get();
-    auto& B = sleInput.GetFreeCoefficientsRef().value().get();
+    const auto& A = sleInputData.GetVariablesCoefficientsRef().value().get();
+    const auto& B = sleInputData.GetFreeCoefficientsRef().value().get();
 
-    auto& sleSolvesPlaceV = *sleSolveData.lock();
+    auto sleSolveDataSP = sleSolveData.lock();
+    auto& sleSolveData = *sleSolveDataSP;
 
     if (GUIUtilityFuncs::IsDetCloseToZero(LinAlgUtility::Determinant(A)))
     {
         sleSolveOutput.lock()->ClearSolve();
 
-        sleSolvesPlaceV.SetSolvingStatus(SLESolvingStatus::SolvedFailful);
+        sleSolveData.SetSolvingStatus(SLESolvingStatus::SolvedFailful);
         solvingStatus.set_text("Детермінант матриці коеф. рівен 0");
-
         practicalTimeComplexity.set_text("");
+    
         return;
     }
 
@@ -1106,18 +1116,17 @@ void SLESolvePanel::onSolvingProcess()
     {
         sleSolveOutput.lock()->ClearSolve();
 
-        sleSolvesPlaceV.SetSolvingStatus(SLESolvingStatus::SolvedFailful);
+        sleSolveData.SetSolvingStatus(SLESolvingStatus::SolvedFailful);
         solvingStatus.set_text("СЛАР не можливо вирішити цим методом");
         practicalTimeComplexity.set_text("");
+    
         return;
     }
 
     auto X = solvingMethod.GetSolveOnce().value();
 
-    sleSolvesPlaceV.SetVarsSolve(std::move(X));
-    sleSolvesPlaceV.SetSolvingStatus(SLESolvingStatus::SolvedSuccessfully);
-
-    sleInput.ClearData();
+    sleSolveData.SetVarsSolve(std::move(X));
+    sleSolveData.SetSolvingStatus(SLESolvingStatus::SolvedSuccessfully);
 
     solvingStatus.set_text
     (
