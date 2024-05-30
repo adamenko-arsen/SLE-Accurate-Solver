@@ -492,6 +492,12 @@ void SLESolveShower::OutputSolve()
     {
         for (std::size_t solveIndex = 0; solveIndex < eqsCount; solveIndex++)
         {
+            if (! (solveIndex < 10))
+            {
+                varsValuesStr += std::format("\n\n... (ще {} рішень змінних)", eqsCount - 10);
+                break;
+            }
+
             if (solveIndex != 0)
             {
                 varsValuesStr += "\n";
