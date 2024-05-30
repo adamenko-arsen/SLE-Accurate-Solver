@@ -213,7 +213,7 @@ SLESolvingStatus SLESolveData::GetSolvingStatus() const noexcept
     return solvingStatus;
 }
 
-// class SLEConfigurator
+// GUI modules classes methods implementations
 
 void SLEConfigurator::SetSLEInputData(std::weak_ptr<SLEInputData> sleInputData)
 {
@@ -837,6 +837,7 @@ void SLEConfigurator::onEqsCountSetting()
 
 void SLEConfigurator::createSLEForm(std::size_t eqsCount)
 {
+    // Initialization of new widgets for SLE form
     varsCoeffsEntries = RTArray2D<Gtk::Entry>(eqsCount, eqsCount);
     varsCoeffsLabels  = RTArray2D<Gtk::Label>(eqsCount * 2, eqsCount);
 
@@ -844,9 +845,11 @@ void SLEConfigurator::createSLEForm(std::size_t eqsCount)
 
     freeCoeffsEntries = std::vector<Gtk::Entry>(eqsCount);
 
+    // Getting the input data
     auto sleInputDataSP = sleData.lock();
     auto& sleInputData = *sleInputDataSP;
 
+    // Initialization of SLE form
     sleInputData.SetEquationsCount(eqsCount);
 
     sleInputData.SetVariablesCoefficients(Matrix(eqsCount, eqsCount));
@@ -913,6 +916,7 @@ void SLEConfigurator::createSLEForm(std::size_t eqsCount)
         freeCoeffsGrid.attach(newFreeCoeff, 0, y);
     }
 
+    // Show SLE nice form above
     varsCoeffsGrid.show_all_children();
     eqMarksGrid.show_all_children();
     freeCoeffsGrid.show_all_children();
@@ -1044,6 +1048,7 @@ void SLESolvePanel::SetSLEInputData(std::weak_ptr<SLEInputData> sleInputData)
 {
     this->sleInputData = sleInputData;
 }
+
 void SLESolvePanel::SetSLESolveData(std::weak_ptr<SLESolveData> sleSolveData)
 {
     this->sleSolveData = sleSolveData;

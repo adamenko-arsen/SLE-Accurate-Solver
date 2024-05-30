@@ -36,7 +36,9 @@ public:
 
         return solvingResult;
     }
+
     bool GetSuccessfulness() const;
+
     Vector& GetVarsValuesRef();
     std::size_t GetItersCount() const
     {

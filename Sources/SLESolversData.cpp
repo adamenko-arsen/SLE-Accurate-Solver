@@ -34,6 +34,7 @@ SLESolvingMethodIndex ComboBoxMethodRecord::GetSolvingMethodIndex() const noexce
 {
     return solvingMethodIndex;
 }
+
 const std::string& ComboBoxMethodRecord::GetMethodName() const
 {
     return methodName;

@@ -44,8 +44,6 @@ bool GaussHoletskiySolver::isSolveSuitable(const Matrix& A, const Vector& B, con
     return true;
 }
 
-#include <iostream>
-
 bool GaussHoletskiySolver::isSolveNotAmbigious(const Vector& B, const Vector& X)
 {
     if (! (B.Size() >= 2))
