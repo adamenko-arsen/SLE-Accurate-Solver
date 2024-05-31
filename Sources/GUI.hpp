@@ -10,6 +10,24 @@
 
 #include <memory>
 
+struct GUIUtilityFuncs final
+{
+    GUIUtilityFuncs() = delete;
+    ~GUIUtilityFuncs() = delete;
+
+    static std::string GetCoeffAShortLabel(std::size_t eqIndex, std::size_t varIndex);
+    static std::string GetCoeffAFancyLabel(std::size_t eqIndex, std::size_t varIndex);
+
+    static std::string GetCoeffBShortLabel(std::size_t eqIndex);
+    static std::string GetCoeffBFancyLabel(std::size_t eqIndex);
+
+    static std::string ToShortScientificForm(double number);
+
+    static double UniformRandom();
+
+    static bool IsDetCloseToZero(double det);
+};
+
 class SLEInputData
 {
 public:
@@ -135,6 +153,7 @@ private:
     Gtk::Alignment eqsCountVerPadding3{};
     Gtk::Alignment eqsCountVerPadding4{};
     Gtk::Alignment eqsCountVerPadding5{};
+    Gtk::Alignment eqsCountVerPadding6{};
 
     Gtk::Label eqsConfStatus{"Невідомий статус"};
 
@@ -145,20 +164,25 @@ private:
     Gtk::Entry  eqsSetterEntry{};
     Gtk::Button eqsSetterButton{"Нова СЛАР"};
 
-    Gtk::Button eqsZeroFillerButton{"Заповнити пусті кліт. 0-ми"};
-    Gtk::Button eqsSetAsInput{"Встановити дану СЛАР"};
+    Gtk::Button eqsZeroFillerButton{"Дозаповн. нулями"};
+    Gtk::Button fillUpSLEFormRandomly{"Дозаповн. випадк. числ."};
+    Gtk::Button clearSLEForm{"Очистити форму"};
+
+    Gtk::Button setSLEFormButton{"Встановити дану СЛАР"};
 
     Gtk::Label sleFormLabel{"Форма введення СЛАР:"};
 
-    void setEqsAsInput();
+    void setSLEForm();
 
     void initializeEqsCount();
 
-    void onEqsCountSetting();
+    void setEqsCount();
     void createSLEForm(std::size_t eqsCount);
     void removeSLEForm();
 
     void fillEmptyEntriesWithZeroes();
+    void fillEmptyEntriesWithRandomNumbers();
+    void doClearSLEForm();
 
     Gtk::ScrolledWindow unlimitedSLEFormScroller{};
 
@@ -202,6 +226,8 @@ private:
 
     Gtk::Label varsDesc{"Рішення СЛАР:"};
     Gtk::Label varsValues{"(ще немає)"};
+    Gtk::ScrolledWindow unlimitedVarsValuesScroller{};
+    Gtk::Box unlimitedVarsValuesScrollerBox{};
 
     Gtk::Label outputGraphLabel{"Графічне вирішення:"};
     Gtk::DrawingArea outputGraph{};

@@ -1,5 +1,6 @@
 #include "SLESolver.hpp"
 
+#include <cmath>
 #include <cstdio>
 
 // class IterationsCounter
@@ -65,12 +66,15 @@ void SLESolver::SetEquationsCount(std::size_t equationsCount)
     isEquationsCountSetted = true;
 }
 
+#include <iostream>
+
 void SLESolver::Solve()
 {
     if (isSolvingApplied)
     {
         return;
     }
+
     auto solvingResult = SolveInternally
     (
           std::move(varsCoeffsMatrix)

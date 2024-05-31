@@ -18,45 +18,45 @@
 
 #include <vector>
 
-struct GUIUtilityFuncs final
+std::string GUIUtilityFuncs::GetCoeffAShortLabel(std::size_t eqIndex, std::size_t varIndex)
 {
-    GUIUtilityFuncs() = delete;
-    ~GUIUtilityFuncs() = delete;
+    return std::format("a{},{}", eqIndex + 1, varIndex + 1);
+}
 
-    static std::string GetCoeffAShortLabel(std::size_t eqIndex, std::size_t varIndex)
-    {
-        return std::format("a{},{}", eqIndex + 1, varIndex + 1);
-    }
+std::string GUIUtilityFuncs::GetCoeffAFancyLabel(std::size_t eqIndex, std::size_t varIndex)
+{
+    return std::format("A[рівняння №{}, змінна №{}]", eqIndex + 1, varIndex + 1);
+}
 
-    static std::string GetCoeffAFancyLabel(std::size_t eqIndex, std::size_t varIndex)
-    {
-        return std::format("A[рівняння №{}, змінна №{}]", eqIndex + 1, varIndex + 1);
-    }
+std::string GUIUtilityFuncs::GetCoeffBShortLabel(std::size_t eqIndex)
+{
+    return std::format("b{}", eqIndex + 1);
+}
 
-    static std::string GetCoeffBShortLabel(std::size_t eqIndex)
-    {
-        return std::format("b{}", eqIndex + 1);
-    }
+std::string GUIUtilityFuncs::GetCoeffBFancyLabel(std::size_t eqIndex)
+{
+    return std::format("B[рівняння №{}]", eqIndex + 1);
+}
 
-    static std::string GetCoeffBFancyLabel(std::size_t eqIndex)
-    {
-        return std::format("B[рівняння №{}]", eqIndex + 1);
-    }
+std::string GUIUtilityFuncs::ToShortScientificForm(double number)
+{
+    std::stringstream ss{};
 
-    static std::string ToShortScientificForm(double number)
-    {
-        std::stringstream ss{};
+    ss << std::scientific << std::setprecision(3) << number;
 
-        ss << std::scientific << std::setprecision(3) << number;
+    return ss.str();
+}
 
-        return ss.str();
-    }
+double GUIUtilityFuncs::UniformRandom()
+{
+    return std::fmod((double)std::rand() / 65536, 1);
+}
 
-    static bool IsDetCloseToZero(double det)
-    {
-        return std::fabs(det) < 10e-12;
-    }
-};
+bool GUIUtilityFuncs::IsDetCloseToZero(double det)
+{
+    return std::fabs(det) < 10e-12;
+}
+
 
 // class SLEInputData
 
@@ -210,7 +210,16 @@ SLESolveShower::SLESolveShower()
     boxLayout.pack_start(outputButton);
 
     boxLayout.pack_start(varsDesc);
-    boxLayout.pack_start(varsValues);
+    boxLayout.pack_start(unlimitedVarsValuesScroller);
+
+    unlimitedVarsValuesScrollerBox.pack_start(varsValues);
+    unlimitedVarsValuesScrollerBox.set_vexpand(true);
+
+    unlimitedVarsValuesScroller.add(unlimitedVarsValuesScrollerBox);
+
+    unlimitedVarsValuesScroller.set_policy(Gtk::POLICY_AUTOMATIC, Gtk::POLICY_AUTOMATIC);
+    unlimitedVarsValuesScroller.set_min_content_height(10);
+    unlimitedVarsValuesScroller.set_max_content_height(80);
 
     boxLayout.pack_start(outputGraphLabel);
     boxLayout.pack_start(outputGraph);
@@ -226,7 +235,7 @@ SLESolveShower::SLESolveShower()
         )
     );
 
-    outputGraph.set_size_request(300, 300);
+    outputGraph.set_size_request(300, 240);
     outputGraph.signal_draw().connect
     (
         [this_ = this](const Cairo::RefPtr<Cairo::Context>& canvas)
@@ -449,12 +458,6 @@ void SLESolveShower::OutputSolve()
     {
         for (std::size_t solveIndex = 0; solveIndex < eqsCount; solveIndex++)
         {
-            if (! (solveIndex < 10))
-            {
-                varsValuesStr += std::format("\n\n... (ще {} рішень змінних)", eqsCount - 10);
-                break;
-            }
-
             if (solveIndex != 0)
             {
                 varsValuesStr += "\n";
@@ -540,8 +543,8 @@ void ApplicationWindow::initializeWidgets()
 
     // Put GUI modules to absolute positions
     fixedLayout.put(sleConfigurator, 0, 0);
-    fixedLayout.put(sleSolver, 1200 + 10, 0);
-    fixedLayout.put(*sleSolveOutput, 1200 + 10, 260 + 10);
+    fixedLayout.put(sleSolver, 640 + 10, 0);
+    fixedLayout.put(*sleSolveOutput, 640 + 10, 260 + 10);
 
     fixedLayout.show();
 
@@ -565,7 +568,7 @@ ApplicationWindow::ApplicationWindow()
 SLEConfigurator::SLEConfigurator()
 {
     set_label("Конфігурація СЛАР");
-    set_size_request(1200, 864 - 20);
+    set_size_request(640, 864 - 20 - 32);
 
     add(boxLayout);
 
@@ -597,26 +600,30 @@ void SLEConfigurator::initializeEqsCount()
     eqsCountVerPadding1.set_margin_bottom(18);
     eqsCountVerPadding2.set_margin_bottom(18);
     eqsCountVerPadding3.set_margin_bottom(18);
-    eqsCountVerPadding4.set_margin_bottom(36);
-    eqsCountVerPadding5.set_margin_bottom(18);
+    eqsCountVerPadding4.set_margin_bottom(18);
+    eqsCountVerPadding5.set_margin_bottom(36);
 
     eqsPropConfGrid.attach(eqsCountHorPadding1, 1, 0, 1, 5);
     eqsPropConfGrid.attach(eqsCountHorPadding2, 3, 0, 1, 5);
 
-    eqsPropConfGrid.attach(eqsCountVerPadding1, 0, 1, 5, 1);
-    eqsPropConfGrid.attach(eqsCountVerPadding2, 0, 3, 5, 1);
-    eqsPropConfGrid.attach(eqsCountVerPadding3, 0, 5, 5, 1);
-    eqsPropConfGrid.attach(eqsCountVerPadding4, 0, 7, 5, 1);
-    eqsPropConfGrid.attach(eqsCountVerPadding5, 0, 9, 5, 1);
+    eqsPropConfGrid.attach(eqsCountVerPadding1, 0,  1, 5, 1);
+    eqsPropConfGrid.attach(eqsCountVerPadding2, 0,  3, 5, 1);
+    eqsPropConfGrid.attach(eqsCountVerPadding3, 0,  5, 5, 1);
+    eqsPropConfGrid.attach(eqsCountVerPadding4, 0,  7, 5, 1);
+    eqsPropConfGrid.attach(eqsCountVerPadding5, 0,  9, 5, 1);
+    eqsPropConfGrid.attach(eqsCountVerPadding6, 0, 11, 5, 1);
 
     eqsPropConfGrid.attach(eqsSetterProp, 0, 4);
     eqsPropConfGrid.attach(eqsSetterEntry, 2, 4);
     eqsPropConfGrid.attach(eqsSetterButton, 4, 4);
 
     eqsPropConfGrid.attach(eqsZeroFillerButton, 0, 6);
-    eqsPropConfGrid.attach(eqsSetAsInput, 2, 6);
+    eqsPropConfGrid.attach(fillUpSLEFormRandomly, 2, 6);
+    eqsPropConfGrid.attach(clearSLEForm, 4, 6);
 
-    eqsPropConfGrid.attach(sleFormLabel, 0, 8);
+    eqsPropConfGrid.attach(setSLEFormButton, 0, 8, 3, 1);
+
+    eqsPropConfGrid.attach(sleFormLabel, 0, 10);
 
     eqsSetterEntry.set_placeholder_text("1..10");
 
@@ -628,7 +635,7 @@ void SLEConfigurator::initializeEqsCount()
         sigc::mem_fun
         (
               *this
-            , &SLEConfigurator::onEqsCountSetting
+            , &SLEConfigurator::setEqsCount
         )
     );
 
@@ -641,19 +648,37 @@ void SLEConfigurator::initializeEqsCount()
         )
     );
 
-    eqsSetAsInput.signal_clicked().connect
+    fillUpSLEFormRandomly.signal_clicked().connect
     (
         sigc::mem_fun
         (
               *this
-            , &SLEConfigurator::setEqsAsInput
+            , &SLEConfigurator::fillEmptyEntriesWithRandomNumbers
+        )
+    );
+
+    clearSLEForm.signal_clicked().connect
+    (
+        sigc::mem_fun
+        (
+              *this
+            , &SLEConfigurator::doClearSLEForm
+        )
+    );
+
+    setSLEFormButton.signal_clicked().connect
+    (
+        sigc::mem_fun
+        (
+              *this
+            , &SLEConfigurator::setSLEForm
         )
     );
 
     eqsPropConfGrid.show_all_children();
 }
 
-void SLEConfigurator::setEqsAsInput()
+void SLEConfigurator::setSLEForm()
 {
     auto sleInputDataSP = sleData.lock();
     auto& sleInputData = *sleInputDataSP;
@@ -758,8 +783,8 @@ void SLEConfigurator::initializeEqsForm()
     unlimitedSLEFormScroller.add(eqsFormBox);
     
     unlimitedSLEFormScroller.set_max_content_width(1170);
-    unlimitedSLEFormScroller.set_max_content_height(640);
-    unlimitedSLEFormScroller.set_min_content_height(640);
+    unlimitedSLEFormScroller.set_max_content_height(478);
+    unlimitedSLEFormScroller.set_min_content_height(478);
 
     eqsFormBox.pack_start(varsCoeffsGrid, Gtk::PACK_SHRINK);
     eqsFormBox.pack_start(eqMarksGrid, Gtk::PACK_SHRINK);
@@ -769,7 +794,7 @@ void SLEConfigurator::initializeEqsForm()
     eqsFormBox.show_all_children();
 }
 
-void SLEConfigurator::onEqsCountSetting()
+void SLEConfigurator::setEqsCount()
 {
     auto mayEqsCount = Convert::ToInteger
     (
@@ -786,7 +811,7 @@ void SLEConfigurator::onEqsCountSetting()
 
     auto eqsCount = mayEqsCount.value();
 
-    if (! (1 <= eqsCount && eqsCount <= 10))
+    if (! (1 <= eqsCount && eqsCount <= 50))
     {
         eqsConfStatus.set_text("Кількість рівнянь не є в проміжку [1; 10]");
         return;
@@ -907,11 +932,11 @@ void SLEConfigurator::removeSLEForm()
     eqMarksGrid.hide();
     freeCoeffsGrid.hide();
 
-    for (std::size_t y = 0; y < eqsCount; y++)
+    for (std::ptrdiff_t y = eqsCount - 1; y >= 0; y--)
     {
-        varsCoeffsGrid.remove_column(0);
-        eqMarksGrid.remove_column(0);
-        freeCoeffsGrid.remove_column(0);
+        varsCoeffsGrid.remove_column(y);
+        eqMarksGrid.remove_column(y);
+        freeCoeffsGrid.remove_column(y);
     }
 
     varsCoeffsEntries = RTArray2D<Gtk::Entry>();
@@ -956,6 +981,74 @@ void SLEConfigurator::fillEmptyEntriesWithZeroes()
         {
             currentEntryOfVectorB.set_text(formattedZero);
         }
+    }
+}
+
+void SLEConfigurator::fillEmptyEntriesWithRandomNumbers()
+{
+    const auto sleInputDataSP = sleData.lock();
+    const auto& sleInputData = *sleInputDataSP;
+
+    if (! sleInputData.IsEquationsCountSetted())
+    {
+        return;
+    }
+
+    auto eqsCount = sleInputData.GetEquationsCount().value();
+
+    for (std::size_t y = 0; y < eqsCount; y++)
+    {
+        for (std::size_t x = 0; x < eqsCount; x++)
+        {
+            auto& currentEntryOfMatrixA = varsCoeffsEntries.At(y, x);
+            const auto& origEntryInput = currentEntryOfMatrixA.get_text();
+
+            if (origEntryInput == "")
+            {
+                currentEntryOfMatrixA.set_text(Convert::NumberToString(Math::FloorWithPrecision
+                (
+                    100 * GUIUtilityFuncs::UniformRandom(), 2
+                )));
+            }
+        }
+
+        auto& currentEntryOfVectorB = freeCoeffsEntries[y];
+        const auto& origEntryInput = currentEntryOfVectorB.get_text();
+
+        if (origEntryInput == "")
+        {
+            currentEntryOfVectorB.set_text(Convert::NumberToString(Math::FloorWithPrecision
+            (
+                100 * GUIUtilityFuncs::UniformRandom(), 2
+            )));
+        }
+    }
+}
+
+void SLEConfigurator::doClearSLEForm()
+{
+const auto sleInputDataSP = sleData.lock();
+    const auto& sleInputData = *sleInputDataSP;
+
+    if (! sleInputData.IsEquationsCountSetted())
+    {
+        return;
+    }
+
+    auto eqsCount = sleInputData.GetEquationsCount().value();
+
+    for (std::size_t y = 0; y < eqsCount; y++)
+    {
+        for (std::size_t x = 0; x < eqsCount; x++)
+        {
+            auto& currentEntryOfMatrixA = varsCoeffsEntries.At(y, x);
+
+            currentEntryOfMatrixA.set_text("");
+        }
+
+        auto& currentEntryOfVectorB = freeCoeffsEntries[y];
+
+        currentEntryOfVectorB.set_text("");
     }
 }
 
@@ -1022,6 +1115,8 @@ void SLESolvePanel::SetSLESolveOutput(std::weak_ptr<SLESolveShower> sleSolveOutp
 {
     this->sleSolveOutput = sleSolveOutput;
 }
+
+#include <iostream>
 
 void SLESolvePanel::onSolvingProcess()
 {

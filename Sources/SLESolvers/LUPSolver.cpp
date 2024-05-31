@@ -12,7 +12,7 @@ std::size_t LUPSolver::maxDiagLine(const Matrix& A, std::size_t baseColumn)
     auto maxDiagValue = std::fabs(A.At(baseColumn, baseColumn));
     std::size_t indexOfMax = baseColumn;
 
-    for (std::size_t curColumn = 0; curColumn < A.TryGetEdgeSize(); curColumn++)
+    for (std::size_t curColumn = baseColumn + 1; curColumn < A.TryGetEdgeSize(); curColumn++)
     {
         auto newDiagValue = std::fabs(A.At(curColumn, baseColumn));
 
