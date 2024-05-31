@@ -937,6 +937,12 @@ void SLEConfigurator::removeSLEForm()
         for (std::size_t x = 0; x < eqsCount; x++)
         {
             varsCoeffsGrid.remove(varsCoeffsEntries.At(y, x));
+            varsCoeffsGrid.remove(varsCoeffsLabels.At(y, x * 2));
+
+            if (x != eqsCount - 1)
+            {
+                varsCoeffsGrid.remove(varsCoeffsLabels.At(y, x * 2 + 1));
+            }
         }
 
         eqMarksGrid.remove_column(y);
