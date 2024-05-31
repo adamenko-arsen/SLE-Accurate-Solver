@@ -1,6 +1,6 @@
-<mxfile host="app.diagrams.net" modified="2024-05-30T15:29:39.068Z" agent="Mozilla/5.0 (X11; Linux x86_64; rv:125.0) Gecko/20100101 Firefox/125.0" etag="O8lerdAv35xaqAeOjsFv" version="24.4.9" type="device">
+<mxfile host="app.diagrams.net" modified="2024-05-31T12:42:29.457Z" agent="Mozilla/5.0 (X11; Linux x86_64; rv:125.0) Gecko/20100101 Firefox/125.0" etag="iwVQKNOhUd5-yP3VyCfS" version="24.4.9" type="device">
   <diagram name="Страница — 1" id="C_KTBG0YvWXX7qI13WYK">
-    <mxGraphModel dx="2029" dy="4369" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="827" pageHeight="1169" math="0" shadow="0">
+    <mxGraphModel dx="2535" dy="3460" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="827" pageHeight="1169" math="0" shadow="0">
       <root>
         <mxCell id="0" />
         <mxCell id="1" parent="0" />
@@ -275,7 +275,7 @@
           </mxGeometry>
         </mxCell>
         <mxCell id="_ccRFipnc-8ZUnOI4sxT-93" value="&lt;div&gt;&lt;i&gt;&amp;lt;&amp;lt;enumeration&amp;gt;&amp;gt;&lt;/i&gt;&lt;br&gt;&lt;/div&gt;&lt;div&gt;&lt;b&gt;SLESolvingMethodIndex&lt;/b&gt;&lt;/div&gt;" style="swimlane;fontStyle=0;childLayout=stackLayout;horizontal=1;startSize=50;fillColor=none;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=1;marginBottom=0;whiteSpace=wrap;html=1;" parent="1" vertex="1">
-          <mxGeometry x="1320" y="-920" width="170" height="120" as="geometry">
+          <mxGeometry x="1350" y="-920" width="170" height="120" as="geometry">
             <mxRectangle x="400" y="40" width="130" height="50" as="alternateBounds" />
           </mxGeometry>
         </mxCell>
@@ -298,7 +298,7 @@
           </mxGeometry>
         </mxCell>
         <mxCell id="_ccRFipnc-8ZUnOI4sxT-100" value="SLEInputData" style="swimlane;fontStyle=1;align=center;verticalAlign=top;childLayout=stackLayout;horizontal=1;startSize=26;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=1;marginBottom=0;whiteSpace=wrap;html=1;" parent="1" vertex="1">
-          <mxGeometry x="1310" y="-760" width="320" height="300" as="geometry" />
+          <mxGeometry x="1450" y="-760" width="320" height="300" as="geometry" />
         </mxCell>
         <mxCell id="_ccRFipnc-8ZUnOI4sxT-101" value="" style="line;strokeWidth=1;fillColor=none;align=left;verticalAlign=middle;spacingTop=-1;spacingLeft=3;spacingRight=3;rotatable=0;labelPosition=right;points=[];portConstraint=eastwest;strokeColor=inherit;" parent="_ccRFipnc-8ZUnOI4sxT-100" vertex="1">
           <mxGeometry y="26" width="320" height="8" as="geometry" />
@@ -381,13 +381,13 @@
           </mxGeometry>
         </mxCell>
         <mxCell id="CZMbjyIImbtfUG7fevTx-8" value="GUIUtilityFuncs" style="swimlane;fontStyle=1;align=center;verticalAlign=top;childLayout=stackLayout;horizontal=1;startSize=26;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=1;marginBottom=0;whiteSpace=wrap;html=1;" vertex="1" parent="1">
-          <mxGeometry x="870" y="-900" width="430" height="180" as="geometry" />
+          <mxGeometry x="870" y="-870" width="430" height="140" as="geometry" />
         </mxCell>
         <mxCell id="CZMbjyIImbtfUG7fevTx-9" value="" style="line;strokeWidth=1;fillColor=none;align=left;verticalAlign=middle;spacingTop=-1;spacingLeft=3;spacingRight=3;rotatable=0;labelPosition=right;points=[];portConstraint=eastwest;strokeColor=inherit;" vertex="1" parent="CZMbjyIImbtfUG7fevTx-8">
           <mxGeometry y="26" width="430" height="8" as="geometry" />
         </mxCell>
-        <mxCell id="CZMbjyIImbtfUG7fevTx-10" value="+ PutNumberToBounds(value: double, from: double, to: double): double&lt;div&gt;+ Logarithm(poweredValue:double, base: double): double&lt;/div&gt;&lt;div&gt;+ FloorToZeroWithPrecision(number: double, maxDigits: std::size_t)&lt;/div&gt;&lt;div&gt;+ GetCoeffAShortLabel(eqIndex: std::size_t, varIndex: std::size_t): std::string&lt;/div&gt;&lt;div&gt;+ GetCoeffAFancyLabel(eqIndex: std::size_t,&amp;nbsp;varIndex: std::size_t): std::string&lt;/div&gt;&lt;div&gt;&lt;div&gt;+ GetCoeffBShortLabel(eqIndex: std::size_t): std::string&lt;/div&gt;&lt;div&gt;+ GetCoeffBFancyLabel(eqIndex: std::size_t): std::string&lt;/div&gt;&lt;div&gt;+ ToShortScientificForm(number: std::size_t): std::string&lt;/div&gt;&lt;div&gt;+ IsDetCloseToZero(det: double): bool&lt;/div&gt;&lt;/div&gt;" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;whiteSpace=wrap;html=1;" vertex="1" parent="CZMbjyIImbtfUG7fevTx-8">
-          <mxGeometry y="34" width="430" height="146" as="geometry" />
+        <mxCell id="CZMbjyIImbtfUG7fevTx-10" value="+ GetCoeffAShortLabel(eqIndex: std::size_t, varIndex: std::size_t): std::string&lt;div&gt;+ GetCoeffAFancyLabel(eqIndex: std::size_t,&amp;nbsp;varIndex: std::size_t): std::string&lt;/div&gt;&lt;div&gt;&lt;div&gt;+ GetCoeffBShortLabel(eqIndex: std::size_t): std::string&lt;/div&gt;&lt;div&gt;+ GetCoeffBFancyLabel(eqIndex: std::size_t): std::string&lt;/div&gt;&lt;div&gt;+ ToShortScientificForm(number: std::size_t): std::string&lt;/div&gt;&lt;div&gt;+ IsDetCloseToZero(det: double): bool&lt;/div&gt;&lt;/div&gt;" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;whiteSpace=wrap;html=1;" vertex="1" parent="CZMbjyIImbtfUG7fevTx-8">
+          <mxGeometry y="34" width="430" height="106" as="geometry" />
         </mxCell>
         <mxCell id="CZMbjyIImbtfUG7fevTx-11" value="" style="endArrow=open;endFill=1;endSize=12;html=1;rounded=0;exitX=0.832;exitY=-0.03;exitDx=0;exitDy=0;exitPerimeter=0;entryX=0.908;entryY=1;entryDx=0;entryDy=0;entryPerimeter=0;" edge="1" parent="1" source="_ccRFipnc-8ZUnOI4sxT-58" target="CZMbjyIImbtfUG7fevTx-10">
           <mxGeometry width="160" relative="1" as="geometry">
@@ -500,6 +500,27 @@
             <Array as="points">
               <mxPoint x="490" y="-510" />
               <mxPoint x="230" y="-750" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="CZMbjyIImbtfUG7fevTx-33" value="" style="endArrow=open;endFill=1;endSize=12;html=1;rounded=0;" edge="1" parent="1" source="_ccRFipnc-8ZUnOI4sxT-58" target="_ccRFipnc-8ZUnOI4sxT-18">
+          <mxGeometry width="160" relative="1" as="geometry">
+            <mxPoint x="1170" y="-225" as="sourcePoint" />
+            <mxPoint x="1340" y="-780" as="targetPoint" />
+            <Array as="points">
+              <mxPoint x="1310" y="-410" />
+              <mxPoint x="1320" y="-880" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="CZMbjyIImbtfUG7fevTx-34" value="" style="endArrow=open;endFill=1;endSize=12;html=1;rounded=0;exitX=0.798;exitY=0.028;exitDx=0;exitDy=0;exitPerimeter=0;" edge="1" parent="1" source="_ccRFipnc-8ZUnOI4sxT-58" target="_ccRFipnc-8ZUnOI4sxT-96">
+          <mxGeometry width="160" relative="1" as="geometry">
+            <mxPoint x="1209" y="-218" as="sourcePoint" />
+            <mxPoint x="1270" y="-720" as="targetPoint" />
+            <Array as="points">
+              <mxPoint x="1220" y="-390" />
+              <mxPoint x="1370" y="-780" />
+              <mxPoint x="1550" y="-780" />
             </Array>
           </mxGeometry>
         </mxCell>

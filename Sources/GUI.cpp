@@ -811,7 +811,7 @@ void SLEConfigurator::setEqsCount()
 
     auto eqsCount = mayEqsCount.value();
 
-    if (! (1 <= eqsCount && eqsCount <= 50))
+    if (! (1 <= eqsCount && eqsCount <= 10))
     {
         eqsConfStatus.set_text("Кількість рівнянь не є в проміжку [1; 10]");
         return;
@@ -934,7 +934,11 @@ void SLEConfigurator::removeSLEForm()
 
     for (std::ptrdiff_t y = eqsCount - 1; y >= 0; y--)
     {
-        varsCoeffsGrid.remove_column(y);
+        for (std::size_t x = 0; x < eqsCount; x++)
+        {
+            varsCoeffsGrid.remove(varsCoeffsEntries.At(y, x));
+        }
+
         eqMarksGrid.remove_column(y);
         freeCoeffsGrid.remove_column(y);
     }
@@ -1115,8 +1119,6 @@ void SLESolvePanel::SetSLESolveOutput(std::weak_ptr<SLESolveShower> sleSolveOutp
 {
     this->sleSolveOutput = sleSolveOutput;
 }
-
-#include <iostream>
 
 void SLESolvePanel::onSolvingProcess()
 {
