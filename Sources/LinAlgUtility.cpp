@@ -2,6 +2,8 @@
 
 #include <cmath>
 
+#include <iostream>
+
 double LinAlgUtility::Determinant(const Matrix& oldM)
 {
     if (! oldM.IsSquare())
@@ -15,7 +17,7 @@ double LinAlgUtility::Determinant(const Matrix& oldM)
 
     for (std::size_t fixedCol = 0; fixedCol < n - 1; fixedCol++)
     {
-        if (m.At(fixedCol, fixedCol))
+        if (detIsCloseToZero(m.At(fixedCol, fixedCol)))
         {
             std::size_t maxIndex = fixedCol;
             double maxValue = std::fabs(m.At(fixedCol, fixedCol));
@@ -57,7 +59,9 @@ double LinAlgUtility::Determinant(const Matrix& oldM)
 
     for (std::size_t diag = 0; diag < n; diag++)
     {
-        det *= m.At(diag, diag);
+        auto diagElem = m.At(diag, diag);
+
+        det *= diagElem;
     }
 
     return det;

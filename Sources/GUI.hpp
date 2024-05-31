@@ -160,6 +160,8 @@ private:
 
     void fillEmptyEntriesWithZeroes();
 
+    Gtk::ScrolledWindow unlimitedSLEFormScroller{};
+
     Gtk::Box eqsFormBox{};
 
     Gtk::Grid varsCoeffsGrid{};

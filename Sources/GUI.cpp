@@ -565,7 +565,7 @@ ApplicationWindow::ApplicationWindow()
 SLEConfigurator::SLEConfigurator()
 {
     set_label("Конфігурація СЛАР");
-    set_size_request(1200, -1);
+    set_size_request(1200, 864 - 20);
 
     add(boxLayout);
 
@@ -576,7 +576,7 @@ SLEConfigurator::SLEConfigurator()
     initializeEqsForm();
 
     boxLayout.pack_start(eqsPropConfGrid);
-    boxLayout.pack_start(eqsFormBox);
+    boxLayout.pack_start(unlimitedSLEFormScroller);
 
     boxLayout.show_all_children();
     boxLayout.show();
@@ -755,10 +755,17 @@ void SLEConfigurator::setEqsAsInput()
 
 void SLEConfigurator::initializeEqsForm()
 {
+    unlimitedSLEFormScroller.add(eqsFormBox);
+    
+    unlimitedSLEFormScroller.set_max_content_width(1170);
+    unlimitedSLEFormScroller.set_max_content_height(640);
+    unlimitedSLEFormScroller.set_min_content_height(640);
+
     eqsFormBox.pack_start(varsCoeffsGrid, Gtk::PACK_SHRINK);
     eqsFormBox.pack_start(eqMarksGrid, Gtk::PACK_SHRINK);
     eqsFormBox.pack_start(freeCoeffsGrid, Gtk::PACK_SHRINK);
 
+    unlimitedSLEFormScroller.show_all_children();
     eqsFormBox.show_all_children();
 }
 
