@@ -125,7 +125,7 @@ std::optional<LDLDecResult> GaussHoletskiySolver::ldlDecompose(const Matrix& A, 
                 itersCounter.AddNew();
             }
 
-            L.At(i, j) = (A.At(i, j) - sum) / D.At(j, j);
+            L.At(i, j) = (A.At(i, j) - sum) / diagElem;
 
             itersCounter.AddNew();
         }

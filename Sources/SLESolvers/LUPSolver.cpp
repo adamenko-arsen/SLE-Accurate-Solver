@@ -143,7 +143,7 @@ std::optional<LUPDecResult> LUPSolver::lupDecompose(Matrix A, IterationsCounter&
 }
 
 std::optional<Vector> LUPSolver::solveY(
-        const Matrix& L
+      const Matrix& L
     , const std::vector<std::size_t>& P
     , const Vector& B
     , IterationsCounter& itersCounter
@@ -166,6 +166,11 @@ std::optional<Vector> LUPSolver::solveY(
     for (std::size_t i = 0; i < n; i++)
     {
         double sum = 0;
+
+        if (isCloseToZero(L.At(i, i)))
+        {
+            return std::nullopt;
+        }
 
         for (std::size_t k = 0; k < i; k++)
         {
