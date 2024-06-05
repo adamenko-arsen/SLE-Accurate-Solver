@@ -9,6 +9,25 @@ bool RotationSolver::isCloseToZero(double x)
     return std::fabs(x) < 1e-9;
 }
 
+std::size_t RotationSolver::suitableDiagLine(const Matrix& A, std::size_t firstLine)
+{
+    double maxValue = std::fabs(A.At(firstLine, firstLine));
+    std::size_t maxIndex = firstLine;
+
+    for (std::size_t i = firstLine + 1; i < A.TryGetEdgeSize(); i++)
+    {
+        auto mayNewMax = std::fabs(A.At(i, firstLine));
+
+        if (mayNewMax > maxValue)
+        {
+            maxValue = mayNewMax;
+            maxIndex = i;
+        }
+    }
+
+    return maxIndex;
+}
+
 SolvingResult RotationSolver::SolveInternally(Matrix&& A, Vector&& B)
 {
     IterationsCounter itersCounter{};
@@ -33,6 +52,18 @@ SolvingResult RotationSolver::SolveInternally(Matrix&& A, Vector&& B)
 
     for (std::size_t i = 0; i < n - 1; i++)
     {
+        auto maxDiagIndex = suitableDiagLine(A, i);
+
+        if (isCloseToZero(A.At(maxDiagIndex, i)))
+        {
+            return SolvingResult::Error();
+        }
+
+        for (std::size_t r = 0; r < n; r++)
+        {
+            std::swap(A.At(i, r), A.At(maxDiagIndex, r));
+        }
+
         for (std::size_t j = i + 1; j < n; j++)
         {
             auto b = AB.At(j, i);
