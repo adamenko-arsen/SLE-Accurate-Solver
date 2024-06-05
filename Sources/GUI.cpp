@@ -241,7 +241,6 @@ SLESolveShower::SLESolveShower()
         [this_ = this](const Cairo::RefPtr<Cairo::Context>& canvas)
         {
             // get width and height here
-
             auto& outputGraph = this_->outputGraph;
 
             const Gtk::Allocation canvasAlloc = outputGraph.get_allocation();
@@ -303,7 +302,7 @@ SLESolveShower::SLESolveShower()
 
             const double valueToPixelsScale = std::min(10e10, (std::min(width, height) / 2) / maxSolvedVarValue / 3);
 
-            // Draw major and minor lines
+            // draw major and minor lines
             const double maxSolvedVarValueMinLimited = std::max(10e-9, maxSolvedVarValue);
 
             const double minorLinesPower = std::floor(Math::Logarithm(maxSolvedVarValueMinLimited, 10));
@@ -351,7 +350,7 @@ SLESolveShower::SLESolveShower()
                 canvas->stroke();
             }
 
-            // Draw X and Y axes
+            // draw X and Y axes
             canvas->set_line_width(2.0);
             canvas->set_source_rgb(0.0, 1.0, 0.0);
 
@@ -385,12 +384,23 @@ SLESolveShower::SLESolveShower()
             }
             else
             {
-                canvas->move_to(centerX - (-centerY * coeffK1Y + coeffBase1X * valueToPixelsScale) , 0);
-                canvas->line_to(centerX - (centerY * coeffK1Y + coeffBase1X * valueToPixelsScale)  , height);
+                canvas->move_to(centerX + (centerY * coeffK1Y + coeffBase1X * valueToPixelsScale)  , 0);
+                canvas->line_to(centerX + (-centerY * coeffK1Y + coeffBase1X * valueToPixelsScale) , height);
             }
             canvas->stroke();
 
-            // Draw the second line
+            //
+            // the code below will choose one of most optimal formula below for each line:
+            //
+            // 1. y = kx + b
+            // 2. x = ly + d
+            //
+            // else gtkmm drawing area won't draw line because
+            // at least one of coordinates of one of points become too large
+            // for rendering
+            //
+
+            // draw the second line
             canvas->set_source_rgb(0.0, 0.0, 1.0);
 
             if (Math::IsNumberInRange(coeffK2X, -1, 1))
@@ -400,12 +410,12 @@ SLESolveShower::SLESolveShower()
             }
             else
             {
-                canvas->move_to(centerX - (-centerY * coeffK2Y - coeffBase2X * valueToPixelsScale) , 0);
-                canvas->line_to(centerX - (centerY * coeffK2Y - coeffBase2X * valueToPixelsScale)  , height);
+                canvas->move_to(centerX + (centerY * coeffK2Y + coeffBase2X * valueToPixelsScale)  , 0);
+                canvas->line_to(centerX + (-centerY * coeffK2Y + coeffBase2X * valueToPixelsScale) , height);
             }
             canvas->stroke();
 
-            // Draw X and Y axises text.
+            // draw X and Y axises text.
             canvas->set_font_size(12);
             canvas->move_to(centerX + 12 / 2 * 1.5, 12);
 
@@ -418,12 +428,12 @@ SLESolveShower::SLESolveShower()
             auto intersectionDrawX = centerX + solveX * valueToPixelsScale;
             auto intersectionDrawY = centerY - solveY * valueToPixelsScale;
 
-            // Draw the intersection
+            // draw the intersection
             canvas->set_source_rgb(1, 1, 0);
             canvas->rectangle(intersectionDrawX - 2, intersectionDrawY - 2, 4, 4);
             canvas->stroke();
 
-            // Draw coordinate
+            // draw coordinate
             canvas->set_source_rgb(1, 1, 1);
             canvas->set_font_size(12);
             canvas->move_to(intersectionDrawX + 3 - 100, intersectionDrawY - 3);
@@ -435,7 +445,7 @@ SLESolveShower::SLESolveShower()
                 )
             );
 
-            // Draw minor and major lines scale
+            // draw minor and major lines scale
             canvas->set_source_rgb(197.0/255, 172.0/255, 255.0/255);
             canvas->set_font_size(12);
 
