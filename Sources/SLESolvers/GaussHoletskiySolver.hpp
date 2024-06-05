@@ -18,7 +18,6 @@ private:
     static bool isCloseToZeroForAmbigiousCheck(double x);
 
     static bool isSolveSuitable(const Matrix& A, const Vector& B, const Vector& X);
-    static bool isSolveNotAmbigious(const Vector& B, const Vector& X);
 
     static std::optional<LDLDecResult> ldlDecompose(const Matrix& A, IterationsCounter& itersCounter);
 

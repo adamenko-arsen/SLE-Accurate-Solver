@@ -4,17 +4,17 @@
 
 bool GaussHoletskiySolver::isCloseToZero(double x)
 {
-    return std::fabs(x) < 1e-9;
+    return std::fabs(x) < 1e-12;
 }
 
 bool GaussHoletskiySolver::isCloseToZeroForSolves(double x)
 {
-    return std::fabs(x) < 1e-9;
+    return std::fabs(x) < 1e-12;
 }
 
 bool GaussHoletskiySolver::isCloseToZeroForAmbigiousCheck(double x)
 {
-    return std::fabs(x) < 1e-9;
+    return std::fabs(x) < 1e-12;
 }
 
 bool GaussHoletskiySolver::isSolveSuitable(const Matrix& A, const Vector& B, const Vector& X)
@@ -42,32 +42,6 @@ bool GaussHoletskiySolver::isSolveSuitable(const Matrix& A, const Vector& B, con
     }
 
     return true;
-}
-
-bool GaussHoletskiySolver::isSolveNotAmbigious(const Vector& B, const Vector& X)
-{
-    if (! (B.Size() >= 2))
-    {
-        return true;
-    }
-
-    for (std::size_t i = 0; i < B.Size(); i++)
-    {
-        if (! isCloseToZeroForAmbigiousCheck(B[i]))
-        {
-            return true;
-        }
-    }
-
-    for (std::size_t i = 0; i < X.Size(); i++)
-    {
-        if (! isCloseToZeroForAmbigiousCheck(X[i]))
-        {
-            return true;
-        }
-    }
-
-    return false;
 }
 
 std::optional<LDLDecResult> GaussHoletskiySolver::ldlDecompose(const Matrix& A, IterationsCounter& itersCounter)
@@ -237,11 +211,6 @@ SolvingResult GaussHoletskiySolver::SolveInternally(Matrix&& A, Vector&& B)
     auto X = solveX(ldl.L, mayZ.value(), itersCounter);
 
     if (! isSolveSuitable(A, B, X))
-    {
-        return SolvingResult::Error();
-    }
-
-    if (! isSolveNotAmbigious(B, X))
     {
         return SolvingResult::Error();
     }

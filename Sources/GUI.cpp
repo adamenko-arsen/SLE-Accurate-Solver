@@ -402,7 +402,7 @@ SLESolveShower::SLESolveShower()
             // Draw coordinate
             canvas->set_source_rgb(1, 1, 1);
             canvas->set_font_size(12);
-            canvas->move_to(intersectionDrawX + 3, intersectionDrawY - 3);
+            canvas->move_to(intersectionDrawX + 3 - 100, intersectionDrawY - 3);
             canvas->show_text(
                 std::format(
                       "(x={} y={})"
@@ -495,6 +495,7 @@ void SLESolveShower::saveSolve()
         return;
     }
 
+    // the data for outputing into file
     std::string formattedSolves = "";
 
     const auto& solves = sleSolveData.GetSolveRef().value().get();
@@ -523,7 +524,7 @@ void ApplicationWindow::initializeWindowHead()
 
 void ApplicationWindow::SetApplicationData(std::weak_ptr<ApplicationData> appData)
 {
-    // Configure the relations between GUI modules
+    // configure the relations between GUI modules
     sleConfigurator.SetSLEInputData(appData.lock()->GetSLEInputData());
 
     sleSolver.SetSLEInputData(appData.lock()->GetSLEInputData());
@@ -541,7 +542,7 @@ void ApplicationWindow::initializeWidgets()
 
     add(fixedLayout);
 
-    // Put GUI modules to absolute positions
+    // put GUI modules to absolute positions
     fixedLayout.put(sleConfigurator, 0, 0);
     fixedLayout.put(sleSolver, 640 + 10, 0);
     fixedLayout.put(*sleSolveOutput, 640 + 10, 260 + 10);
@@ -587,9 +588,8 @@ SLEConfigurator::SLEConfigurator()
 
 void SLEConfigurator::initializeEqsCount()
 {
-    // Attach a lot of children widgets to a cute grid of items
-
-    eqsPropConfGrid.attach(eqsConfStatus, 0, 0, 3, 1);
+    // attach a lot of children widgets to a cute grid of items
+    eqsPropConfGrid.attach(eqsConfStatus, 0, 0, 5, 1);
 
     eqsPropConfGrid.attach(eqsCountProp, 0, 2);
     eqsPropConfGrid.attach(eqsCountValue, 2, 2);
@@ -826,7 +826,7 @@ void SLEConfigurator::setEqsCount()
 
 void SLEConfigurator::createSLEForm(std::size_t eqsCount)
 {
-    // Initialization of new widgets for SLE form
+    // initialization of new widgets for SLE form
     varsCoeffsEntries = RTArray2D<Gtk::Entry>(eqsCount, eqsCount);
     varsCoeffsLabels  = RTArray2D<Gtk::Label>(eqsCount * 2, eqsCount);
 
@@ -848,6 +848,7 @@ void SLEConfigurator::createSLEForm(std::size_t eqsCount)
     {
         for (std::size_t x = 0; x < eqsCount; x++)
         {
+            // add a new variable coefficient entry
             auto& newVarCoeff = varsCoeffsEntries.At(y, x);
             
             newVarCoeff = Gtk::Entry();
@@ -863,6 +864,7 @@ void SLEConfigurator::createSLEForm(std::size_t eqsCount)
                 GUIUtilityFuncs::GetCoeffAFancyLabel(y, x)
             );
 
+            // add a new plus and var descriptor labels
             auto& newIndexedVar  = varsCoeffsLabels.At(y, 2 * x);
             auto& newOperatorAdd = varsCoeffsLabels.At(y, 2 * x + 1);
 
@@ -881,12 +883,14 @@ void SLEConfigurator::createSLEForm(std::size_t eqsCount)
             }
         }
 
+        // add a new equality mark label
         auto& newLEEquationMark = leEquationMarkLabels[y];
         newLEEquationMark = Gtk::Label();
         newLEEquationMark.set_text("=");
         newLEEquationMark.set_size_request(32, 42);
         eqMarksGrid.attach(newLEEquationMark, 0, y);
 
+        // add a new free coefficient entry
         auto& newFreeCoeff = freeCoeffsEntries[y];
         newFreeCoeff = Gtk::Entry();
         newFreeCoeff.set_width_chars(6);
@@ -920,6 +924,7 @@ void SLEConfigurator::removeSLEForm()
     auto sleInputDataSP = sleData.lock();
     auto& sleInputData = *sleInputDataSP;
 
+    // don't do anything if there is no sle form
     if (! sleInputData.IsEquationsCountSetted())
     {
         return;
@@ -1128,7 +1133,7 @@ void SLESolvePanel::SetSLESolveOutput(std::weak_ptr<SLESolveShower> sleSolveOutp
 
 void SLESolvePanel::onSolvingProcess()
 {
-    // Get the selected method
+    // get the selected method
     auto comboBoxMethodIndex = comboBoxMethodsNames.get_active_id();
 
     if (comboBoxMethodIndex == "")
@@ -1137,7 +1142,7 @@ void SLESolvePanel::onSolvingProcess()
         return;
     }
 
-    // Check whether the SLE is confirmed
+    // check whether the SLE is confirmed
     auto sleInputDataSP = sleInputData.lock();
     auto& sleInputData = *sleInputDataSP;
 
@@ -1147,7 +1152,7 @@ void SLESolvePanel::onSolvingProcess()
         return;
     }
 
-    // Get the essential information for the solving process
+    // get the essential information for the solving process
     auto eqsCount = sleInputData.GetEquationsCount().value();
 
     const auto& A = sleInputData.GetVariablesCoefficientsRef().value().get();
@@ -1156,6 +1161,7 @@ void SLESolvePanel::onSolvingProcess()
     auto sleSolveDataSP = sleSolveData.lock();
     auto& sleSolveData = *sleSolveDataSP;
 
+    // zero determinant check
     if (GUIUtilityFuncs::IsDetCloseToZero(LinAlgUtility::Determinant(A)))
     {
         sleSolveOutput.lock()->ClearSolve();
@@ -1167,6 +1173,7 @@ void SLESolvePanel::onSolvingProcess()
         return;
     }
 
+    // create a new chose solver
     auto solvingMethodP = SLESolverFactory::CreateNew
     (
         ComboBoxMethodRecords::ComboBoxMethodRecordsField
@@ -1178,12 +1185,14 @@ void SLESolvePanel::onSolvingProcess()
 
     auto& solvingMethod = *solvingMethodP;
 
+    // start the solving process
     solvingMethod.SetEquationsCount(eqsCount);
     solvingMethod.SetVariablesCoefficients(A);
     solvingMethod.SetFreeCoefficients(B);
 
     solvingMethod.Solve();
 
+    // if the solving is not successful
     if (! solvingMethod.IsSolvedSuccessfully().value())
     {
         sleSolveOutput.lock()->ClearSolve();
@@ -1195,6 +1204,7 @@ void SLESolvePanel::onSolvingProcess()
         return;
     }
 
+    // set the solves to other widget
     auto X = solvingMethod.GetSolveOnce().value();
 
     sleSolveData.SetVarsSolve(std::move(X));
