@@ -7,5 +7,5 @@ struct LinAlgUtility final
     static double Determinant(const Matrix& squareMatrix);
 
 private:
-    static bool detIsCloseToZero(double x);
+    static bool detIsCloseToZero(double number);
 };

@@ -24,9 +24,9 @@ double Math::FloorWithPrecision(double number, std::size_t maxDigits)
 {
     bool isPositive = number >= 0;
 
-    auto multiplier = std::pow(10, maxDigits);
+    auto atomicUnit = 1.0 / std::pow(10, maxDigits);
 
-    return (isPositive ? 1 : -1) * (std::floor(std::fabs(number) * multiplier) / multiplier);
+    return (isPositive ? 1 : -1) * (std::floor(std::fabs(number) / atomicUnit) * atomicUnit);
 }
 
 double Math::IsNumberInRange(double value, double from, double to)

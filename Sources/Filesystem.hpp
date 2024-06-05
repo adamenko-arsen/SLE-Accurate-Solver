@@ -5,4 +5,4 @@
 
 bool WriteToFile(const std::string& fileName, const std::string& content);
 
-std::optional<std::string> ReadFromFile(const std::string& inputFileName);
+std::optional<std::string> ReadFromFile(const std::string& fileName);

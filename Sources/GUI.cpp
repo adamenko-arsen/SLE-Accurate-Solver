@@ -361,6 +361,17 @@ SLESolveShower::SLESolveShower()
             canvas->line_to(centerX, height);
             canvas->stroke();
 
+            //
+            // the code below will choose one of most optimal formula below for each line:
+            //
+            // 1. y = kx + b
+            // 2. x = ly + d
+            //
+            // else gtkmm drawing area won't draw line because
+            // at least one of coordinates of one of points become too large
+            // for rendering
+            //
+
             // get lines' alternative coefficients
             const double coeffK1X = -coeffA1 / coeffB1;
             const double coeffK1Y = -coeffB1 / coeffA1;
@@ -388,17 +399,6 @@ SLESolveShower::SLESolveShower()
                 canvas->line_to(centerX + (-centerY * coeffK1Y + coeffBase1X * valueToPixelsScale) , height);
             }
             canvas->stroke();
-
-            //
-            // the code below will choose one of most optimal formula below for each line:
-            //
-            // 1. y = kx + b
-            // 2. x = ly + d
-            //
-            // else gtkmm drawing area won't draw line because
-            // at least one of coordinates of one of points become too large
-            // for rendering
-            //
 
             // draw the second line
             canvas->set_source_rgb(0.0, 0.0, 1.0);

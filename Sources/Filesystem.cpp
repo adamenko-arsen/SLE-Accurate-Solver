@@ -11,9 +11,9 @@ bool WriteToFile(const std::string& outputFileName, const std::string& newConten
         return false;
     }
 
-    for (const auto& outChr : newContent)
+    for (const auto& outputChar : newContent)
     {
-        fputc(outChr, outputHandler);
+        fputc(outputChar, outputHandler);
     }
 
     fclose(outputHandler);
@@ -21,24 +21,24 @@ bool WriteToFile(const std::string& outputFileName, const std::string& newConten
     return true;
 }
 
-std::optional<std::string> ReadFromFile(const std::string& inputFileName)
+std::optional<std::string> ReadFromFile(const std::string& fileName)
 {
-    auto inputHandler = fopen(inputFileName.c_str(), "r");
+    auto inputHandler = fopen(fileName.c_str(), "r");
 
     if (! (inputHandler != NULL))
     {
         return std::nullopt;
     }
 
-    std::string readContent;
+    std::string fileContent;
 
-    int inChr;
-    while ((inChr = fgetc(inputHandler)) != EOF)
+    int inputChar;
+    while ((inputChar = fgetc(inputHandler)) != EOF)
     {
-        readContent += inChr;
+        fileContent += inputChar;
     }
 
     fclose(inputHandler);
 
-    return readContent;
+    return fileContent;
 }

@@ -17,13 +17,13 @@ std::optional<std::ptrdiff_t> Convert::ToInteger(const std::string& mayFormatted
 
 std::optional<double> Convert::ToNumber(const std::string& mayFormattedNumber)
 {
-    std::istringstream iss(mayFormattedNumber);
-    iss.imbue(std::locale::classic());
+    std::istringstream streamForFormatting(mayFormattedNumber);
+    streamForFormatting.imbue(std::locale::classic());
 
     double result;
-    iss >> result;
+    streamForFormatting >> result;
 
-    if (iss.fail() || !iss.eof())
+    if (streamForFormatting.fail() || !streamForFormatting.eof())
     {
         return std::nullopt;
     }
@@ -33,10 +33,10 @@ std::optional<double> Convert::ToNumber(const std::string& mayFormattedNumber)
 
 std::string Convert::NumberToString(double number)
 {
-    std::ostringstream oss;
+    std::ostringstream streamForFormatting;
 
-    oss.imbue(std::locale::classic());
-    oss << number;
+    streamForFormatting.imbue(std::locale::classic());
+    streamForFormatting << number;
 
-    return oss.str();
+    return streamForFormatting.str();
 }

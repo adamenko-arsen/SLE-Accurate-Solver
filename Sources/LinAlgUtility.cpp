@@ -67,7 +67,7 @@ double LinAlgUtility::Determinant(const Matrix& oldM)
     return det;
 }
 
-bool LinAlgUtility::detIsCloseToZero(double x)
+bool LinAlgUtility::detIsCloseToZero(double number)
 {
-    return std::fabs(x) < 10e-9;
+    return std::fabs(number) < 10e-9;
 }

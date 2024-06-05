@@ -11,13 +11,13 @@ std::ptrdiff_t Time::GetTimeSeconds()
 
 std::string Time::GetCurrentFormalTime()
 {
-    auto secs = GetTimeSeconds();
+    auto seconds = GetTimeSeconds();
 
     return std::format
     (
         "{}:{}:{} UTC+00:00"
-        , secs / (60 * 60) % 24
-        , secs / 60 % 60
-        , secs % 60
+        , seconds / (60 * 60) % 24
+        , seconds / 60 % 60
+        , seconds % 60
     );
 }
