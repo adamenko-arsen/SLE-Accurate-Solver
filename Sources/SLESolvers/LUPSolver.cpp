@@ -41,6 +41,22 @@ std::optional<LUPDecResult> LUPSolver::lupDecompose(Matrix A, IterationsCounter&
 
     for (std::size_t j = 0; j < n; j++)
     {
+        for (std::size_t i = j; i < n; i++)
+        {
+            double sum = 0;
+
+            for (std::size_t k = 0; k < j; k++)
+            {
+                sum += A.At(i, k) * A.At(k, j);
+
+                itersCounter.AddNew();
+            }
+
+            A.At(i, j) -= sum;
+
+            itersCounter.AddNew();
+        }
+
         auto maxDiagColumn = maxDiagLine(A, j);
 
         if (isCloseToZero(A.At(maxDiagColumn, j)))
@@ -57,45 +73,21 @@ std::optional<LUPDecResult> LUPSolver::lupDecompose(Matrix A, IterationsCounter&
 
         std::swap(P[j], P[maxDiagColumn]);
 
-        for (std::size_t i = j; i < n; i++)
+        for (std::size_t i = j + 1; i < n; i++)
         {
+            double sum = 0;
+
+            for (std::size_t k = 0; k < j; k++)
             {
-                double sum = 0;
-
-                for (std::size_t k = 0; k < j; k++)
-                {
-                    sum += A.At(i, k) * A.At(k, j);
-
-                    itersCounter.AddNew();
-                }
-
-                A.At(i, j) -= sum;
+                sum += A.At(j, k) * A.At(k, i);
 
                 itersCounter.AddNew();
             }
 
-            if (i >= j + 1)
-            {
-                double sum = 0;
+            A.At(j, i) -= sum;
+            A.At(j, i) /= A.At(j, j);
 
-                for (std::size_t k = 0; k < j; k++)
-                {
-                    sum += A.At(j, k) * A.At(k, i);
-
-                    itersCounter.AddNew();
-                }
-
-                A.At(j, i) -= sum;
-
-                if (isCloseToZero(A.At(j, j)))
-                {
-                    return std::nullopt;
-                }
-
-                A.At(j, i) /= A.At(j, j);
-
-                itersCounter.AddNew();
-            }
+            itersCounter.AddNew();
         }
     }
 
