@@ -363,22 +363,46 @@ SLESolveShower::SLESolveShower()
             canvas->stroke();
 
             // get lines' alternative coefficients
-            const double coeffK1 = Math::PutNumberToBounds(-coeffA1 / coeffB1, -100, 100);
-            const double coeffBase1 = coeffC1 / coeffB1;
+            const double coeffK1X = -coeffA1 / coeffB1;
+            const double coeffK1Y = -coeffB1 / coeffA1;
 
-            const double coeffK2 = Math::PutNumberToBounds(-coeffA2 / coeffB2, -100, 100);
-            const double coeffBase2 = coeffC2 / coeffB2;
+            const double coeffBase1Y = coeffC1 / coeffB1;
+            const double coeffBase1X = coeffC1 / coeffA1;
+
+            const double coeffK2X = -coeffA2 / coeffB2;
+            const double coeffK2Y = -coeffB2 / coeffA2;
+
+            const double coeffBase2Y = coeffC2 / coeffB2;
+            const double coeffBase2X = coeffC2 / coeffA2;
 
             // Draw the first line
             canvas->set_source_rgb(1.0, 0.0, 0.0);
-            canvas->move_to(0,     centerY - (-centerX * coeffK1 + coeffBase1 * valueToPixelsScale));
-            canvas->line_to(width, centerY - (centerX * coeffK1 + coeffBase1 * valueToPixelsScale));
+
+            if (Math::IsNumberInRange(coeffK1X, -1, 1))
+            {
+                canvas->move_to(0     , centerY - (-centerX * coeffK1X + coeffBase1Y * valueToPixelsScale));
+                canvas->line_to(width , centerY - (centerX * coeffK1X + coeffBase1Y * valueToPixelsScale));
+            }
+            else
+            {
+                canvas->move_to(centerX - (-centerY * coeffK1Y + coeffBase1X * valueToPixelsScale) , 0);
+                canvas->line_to(centerX - (centerY * coeffK1Y + coeffBase1X * valueToPixelsScale)  , height);
+            }
             canvas->stroke();
 
             // Draw the second line
             canvas->set_source_rgb(0.0, 0.0, 1.0);
-            canvas->move_to(0,     centerY - (-centerX * coeffK2 + coeffBase2 * valueToPixelsScale));
-            canvas->line_to(width, centerY - (centerX * coeffK2 + coeffBase2 * valueToPixelsScale));
+
+            if (Math::IsNumberInRange(coeffK2X, -1, 1))
+            {
+                canvas->move_to(0,     centerY - (-centerX * coeffK2X + coeffBase2Y * valueToPixelsScale));
+                canvas->line_to(width, centerY - (centerX * coeffK2X + coeffBase2Y * valueToPixelsScale));
+            }
+            else
+            {
+                canvas->move_to(centerX - (-centerY * coeffK2Y - coeffBase2X * valueToPixelsScale) , 0);
+                canvas->line_to(centerX - (centerY * coeffK2Y - coeffBase2X * valueToPixelsScale)  , height);
+            }
             canvas->stroke();
 
             // Draw X and Y axises text.

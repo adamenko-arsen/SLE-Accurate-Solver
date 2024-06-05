@@ -28,3 +28,8 @@ double Math::FloorWithPrecision(double number, std::size_t maxDigits)
 
     return (isPositive ? 1 : -1) * (std::floor(std::fabs(number) * multiplier) / multiplier);
 }
+
+double Math::IsNumberInRange(double value, double from, double to)
+{
+    return from <= value && value <= to;
+}

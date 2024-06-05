@@ -12,4 +12,6 @@ struct Math final
     static double FloorWithPrecision(double number, std::size_t maxDigits);
 
     static double Logarithm(double poweredValue, double base);
+
+    static double IsNumberInRange(double value, double from, double to);
 };
