@@ -9,8 +9,6 @@ bool RotationSolver::isCloseToZero(double x)
     return std::fabs(x) < 1e-9;
 }
 
-#include <iostream>
-
 std::size_t RotationSolver::suitableDiagLine(const Matrix& A, std::size_t firstLine)
 {
     double maxValue = std::fabs(A.At(firstLine, firstLine));
@@ -26,8 +24,6 @@ std::size_t RotationSolver::suitableDiagLine(const Matrix& A, std::size_t firstL
             maxIndex = i;
         }
     }
-
-    std::cout << maxIndex << std::endl;
 
     return maxIndex;
 }
@@ -60,7 +56,6 @@ SolvingResult RotationSolver::SolveInternally(Matrix&& A, Vector&& B)
 
         if (isCloseToZero(AB.At(maxDiagIndex, i)))
         {
-            std::cout << "X" << std::endl;
             return SolvingResult::Error();
         }
 
@@ -78,7 +73,6 @@ SolvingResult RotationSolver::SolveInternally(Matrix&& A, Vector&& B)
 
             if (! (squaresSum > 0))
             {
-                std::cout << "Y" << std::endl;
                 return SolvingResult::Error();
             }
 
@@ -86,7 +80,6 @@ SolvingResult RotationSolver::SolveInternally(Matrix&& A, Vector&& B)
 
             if (isCloseToZero(sqrtedSquaresSum))
             {
-                std::cout << "Z" << std::endl;
                 return SolvingResult::Error();
             }
 
