@@ -9,6 +9,8 @@ bool RotationSolver::isCloseToZero(double x)
     return std::fabs(x) < 1e-9;
 }
 
+#include <iostream>
+
 std::size_t RotationSolver::suitableDiagLine(const Matrix& A, std::size_t firstLine)
 {
     double maxValue = std::fabs(A.At(firstLine, firstLine));
@@ -25,6 +27,8 @@ std::size_t RotationSolver::suitableDiagLine(const Matrix& A, std::size_t firstL
         }
     }
 
+    std::cout << maxIndex << std::endl;
+
     return maxIndex;
 }
 
@@ -34,7 +38,7 @@ SolvingResult RotationSolver::SolveInternally(Matrix&& A, Vector&& B)
 
     auto n = B.Size();
 
-    RTArray2D<double> AB(n + 1, n);
+    Matrix AB(n, n + 1);
 
     for (std::size_t y = 0; y < n; y++)
     {
@@ -52,16 +56,17 @@ SolvingResult RotationSolver::SolveInternally(Matrix&& A, Vector&& B)
 
     for (std::size_t i = 0; i < n - 1; i++)
     {
-        auto maxDiagIndex = suitableDiagLine(A, i);
+        auto maxDiagIndex = suitableDiagLine(AB, i);
 
-        if (isCloseToZero(A.At(maxDiagIndex, i)))
+        if (isCloseToZero(AB.At(maxDiagIndex, i)))
         {
+            std::cout << "X" << std::endl;
             return SolvingResult::Error();
         }
 
-        for (std::size_t r = 0; r < n; r++)
+        for (std::size_t r = 0; r < n + 1; r++)
         {
-            std::swap(A.At(i, r), A.At(maxDiagIndex, r));
+            std::swap(AB.At(i, r), AB.At(maxDiagIndex, r));
         }
 
         for (std::size_t j = i + 1; j < n; j++)
@@ -73,6 +78,7 @@ SolvingResult RotationSolver::SolveInternally(Matrix&& A, Vector&& B)
 
             if (! (squaresSum > 0))
             {
+                std::cout << "Y" << std::endl;
                 return SolvingResult::Error();
             }
 
@@ -80,6 +86,7 @@ SolvingResult RotationSolver::SolveInternally(Matrix&& A, Vector&& B)
 
             if (isCloseToZero(sqrtedSquaresSum))
             {
+                std::cout << "Z" << std::endl;
                 return SolvingResult::Error();
             }
 
