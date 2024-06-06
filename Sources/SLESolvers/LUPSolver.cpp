@@ -67,8 +67,6 @@ std::optional<LUPDecResult> LUPSolver::lupDecompose(Matrix A, IterationsCounter&
         for (std::size_t r = 0; r < n; r++)
         {
             std::swap(A.At(j, r), A.At(maxDiagColumn, r));
-
-            itersCounter.AddNew();
         }
 
         std::swap(P[j], P[maxDiagColumn]);
@@ -86,9 +84,9 @@ std::optional<LUPDecResult> LUPSolver::lupDecompose(Matrix A, IterationsCounter&
 
             A.At(j, i) -= sum;
             A.At(j, i) /= A.At(j, j);
-
-            itersCounter.AddNew();
         }
+
+        itersCounter.AddNew();
     }
 
     Matrix L(n, n);

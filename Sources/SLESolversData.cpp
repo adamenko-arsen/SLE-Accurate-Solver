@@ -46,7 +46,7 @@ const std::string& ComboBoxMethodRecord::GetMethodPracticalItersComplexity() con
 
 std::vector<ComboBoxMethodRecord> ComboBoxMethodRecords::ComboBoxMethodRecordsField =
 {
-      ComboBoxMethodRecord(SLESolvingMethodIndex::LUP            , "LUP-метод"              , "1/3*n^3 + 9/2*n^2 + 19/6*n")
+      ComboBoxMethodRecord(SLESolvingMethodIndex::LUP            , "LUP-метод"              , "1/3*n^3 + 3n^2 + 14/3*n")
     , ComboBoxMethodRecord(SLESolvingMethodIndex::GaussHoletskiy , "Метод Гауса-Холецького" , "1/6*n^3 + 5/2*n^2 + 7/3*n")
     , ComboBoxMethodRecord(SLESolvingMethodIndex::Rotation       , "Метод обертання"        , "1/3*n^3 + 5/2*n^2 + 1/6*n")
 };
