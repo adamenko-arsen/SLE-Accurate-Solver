@@ -2,7 +2,7 @@
 
 #include <cstdio>
 
-bool WriteToFile(const std::string& outputFileName, const std::string& newContent)
+bool Filesystem::WriteToFile(const std::string& outputFileName, const std::string& newContent)
 {
     auto outputHandler = fopen(outputFileName.c_str(), "w");
 
@@ -21,7 +21,7 @@ bool WriteToFile(const std::string& outputFileName, const std::string& newConten
     return true;
 }
 
-std::optional<std::string> ReadFromFile(const std::string& fileName)
+std::optional<std::string> Filesystem::ReadFromFile(const std::string& fileName)
 {
     auto inputHandler = fopen(fileName.c_str(), "r");
 

@@ -3,6 +3,12 @@
 #include <string>
 #include <optional>
 
-bool WriteToFile(const std::string& fileName, const std::string& content);
+struct Filesystem final
+{
+    Filesystem() = delete;
+    ~Filesystem() = delete;
 
-std::optional<std::string> ReadFromFile(const std::string& fileName);
+    static bool WriteToFile(const std::string& fileName, const std::string& content);
+
+    static std::optional<std::string> ReadFromFile(const std::string& fileName);
+};

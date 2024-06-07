@@ -543,7 +543,7 @@ void SLESolveShower::saveSolve()
         formattedSolves += Convert::NumberToString(solves[solveIndex]);
     }
 
-    WriteToFile(outputFileName.get_text(), formattedSolves);
+    Filesystem::WriteToFile(outputFileName.get_text(), formattedSolves);
 }
 
 void ApplicationWindow::initializeWindowHead()
