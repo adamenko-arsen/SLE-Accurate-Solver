@@ -17,13 +17,12 @@ private:
     static bool isCloseToZeroForSolves(double x);
     static bool isCloseToZeroForAmbigiousCheck(double x);
 
-    static bool isSolveSuitable(const Matrix& A, const Vector& B, const Vector& X);
+    static bool isSolveSuitable(const Matrix& A, const Vector& B, const Vector& X, IterationsCounter& IterationsCounter);
 
-    static std::optional<LDLDecResult> ldlDecompose(const Matrix& A, IterationsCounter& itersCounter);
+    static std::optional<Matrix> llDecompose(const Matrix& A, IterationsCounter& itersCounter);
 
-    static Vector solveY(const Matrix& L, const Vector& B, IterationsCounter& itersCounter);
-    static std::optional<Vector> solveZ(const Matrix& D, const Vector& Y, IterationsCounter& itersCounter);
-    static Vector solveX(const Matrix& L, const Vector& Z, IterationsCounter& itersCounter);
+    static std::optional<Vector> solveY(const Matrix& L, const Vector& B, IterationsCounter& itersCounter);
+    static std::optional<Vector> solveX(const Matrix& L, const Vector& Y, IterationsCounter& itersCounter);
 
 protected:
     SolvingResult SolveInternally(Matrix&& A, Vector&& B);

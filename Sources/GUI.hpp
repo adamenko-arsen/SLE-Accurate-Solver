@@ -213,7 +213,7 @@ public:
     void SetSLESolveData(std::weak_ptr<SLESolveData> sleSolveData);
 
     void OutputSolve();
-    void ClearSolve();
+    void ShowInvalidSolve();
 
 private:
     Gtk::Box boxLayout{};

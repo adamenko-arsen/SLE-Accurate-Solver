@@ -53,8 +53,6 @@ std::optional<LUPDecResult> LUPSolver::lupDecompose(Matrix A, IterationsCounter&
             }
 
             A.At(i, j) -= sum;
-
-            itersCounter.AddNew();
         }
 
         auto maxDiagColumn = maxDiagLine(A, j);
@@ -67,6 +65,8 @@ std::optional<LUPDecResult> LUPSolver::lupDecompose(Matrix A, IterationsCounter&
         for (std::size_t r = 0; r < n; r++)
         {
             std::swap(A.At(j, r), A.At(maxDiagColumn, r));
+
+            itersCounter.AddNew();
         }
 
         std::swap(P[j], P[maxDiagColumn]);
@@ -85,8 +85,6 @@ std::optional<LUPDecResult> LUPSolver::lupDecompose(Matrix A, IterationsCounter&
             A.At(j, i) -= sum;
             A.At(j, i) /= A.At(j, j);
         }
-
-        itersCounter.AddNew();
     }
 
     Matrix L(n, n);
@@ -101,8 +99,6 @@ std::optional<LUPDecResult> LUPSolver::lupDecompose(Matrix A, IterationsCounter&
             itersCounter.AddNew();
         }
         U.At(y, y) = 1;
-
-        itersCounter.AddNew();
     }
 
     for (std::size_t j = 0; j < n; j++)
@@ -125,8 +121,9 @@ std::optional<LUPDecResult> LUPSolver::lupDecompose(Matrix A, IterationsCounter&
         }
     }
 
-    return LUPDecResult {
-            .L = L
+    return LUPDecResult
+    {
+          .L = L
         , .U = U
         , .P = P
     };
@@ -145,11 +142,11 @@ std::optional<Vector> LUPSolver::solveY(
 
     for (std::size_t i = 0; i < n; i++)
     {
+        itersCounter.AddNew();
+
         if (isCloseToZero(L.At(i, i)))
         {
             return std::nullopt;
-
-            itersCounter.AddNew();
         }
     }
 
@@ -173,8 +170,6 @@ std::optional<Vector> LUPSolver::solveY(
             B[P[i]] - sum
         )
         / L.At(i, i);
-
-        itersCounter.AddNew();
     }
 
     return Y;
@@ -198,8 +193,6 @@ Vector LUPSolver::solveX(const Matrix& U, const Vector& Y, IterationsCounter& it
         }
 
         X[i] = Y[i] - sum;
-
-        itersCounter.AddNew();
     }
 
     return X;

@@ -190,7 +190,7 @@ void SLESolveShower::SetSLESolveData(std::weak_ptr<SLESolveData> sleSolveData)
 SLESolveShower::SLESolveShower()
 {
     set_label("Виведення рішень СЛАР");
-    set_size_request(400, 400);
+    set_size_request(480, 400);
 
     add(boxLayout);
 
@@ -498,6 +498,9 @@ void SLESolveShower::OutputSolve()
             }
             varsValuesStr += std::format("X{}: {}", solveIndex + 1, solves[solveIndex]);
         }
+
+        doRenderGraph = false;
+        outputGraph.queue_draw();
     }
     else
     {
@@ -510,13 +513,13 @@ void SLESolveShower::OutputSolve()
     varsValues.set_text(varsValuesStr);
 }
 
-void SLESolveShower::ClearSolve()
+void SLESolveShower::ShowInvalidSolve()
 {
     outputStatus.set_text("Рішення неможливо отримати");
     varsValues.set_text("(розв'язків немає)");
 
-    outputGraph.queue_draw();
     doRenderGraph = false;
+    outputGraph.queue_draw();
 }
 
 void SLESolveShower::saveSolve()
@@ -1104,7 +1107,7 @@ const auto sleInputDataSP = sleData.lock();
 SLESolvePanel::SLESolvePanel()
 {
     set_label("Розв'язання СЛАР");
-    set_size_request(400, 260);
+    set_size_request(480, 260);
 
     add(solverRootBox);
 
@@ -1198,7 +1201,7 @@ void SLESolvePanel::onSolvingProcess()
     // zero determinant check
     if (GUIUtilityFuncs::IsDetCloseToZero(LinAlgUtility::Determinant(A)))
     {
-        sleSolveOutput.lock()->ClearSolve();
+        sleSolveOutput.lock()->ShowInvalidSolve();
 
         sleSolveData.SetSolvingStatus(SLESolvingStatus::SolvedFailful);
         solvingStatus.set_text("Детермінант матриці коеф. рівен 0");
@@ -1229,7 +1232,7 @@ void SLESolvePanel::onSolvingProcess()
     // if the solving is not successful
     if (! solvingMethod.IsSolvedSuccessfully().value())
     {
-        sleSolveOutput.lock()->ClearSolve();
+        sleSolveOutput.lock()->ShowInvalidSolve();
 
         sleSolveData.SetSolvingStatus(SLESolvingStatus::SolvedFailful);
         solvingStatus.set_text("СЛАР не можливо вирішити цим методом");

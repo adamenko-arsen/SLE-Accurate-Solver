@@ -17,7 +17,7 @@ bool GaussHoletskiySolver::isCloseToZeroForAmbigiousCheck(double x)
     return std::fabs(x) < 1e-12;
 }
 
-bool GaussHoletskiySolver::isSolveSuitable(const Matrix& A, const Vector& B, const Vector& X)
+bool GaussHoletskiySolver::isSolveSuitable(const Matrix& A, const Vector& B, const Vector& X, IterationsCounter& itersCounter)
 {
     auto n = B.Size();
 
@@ -30,11 +30,15 @@ bool GaussHoletskiySolver::isSolveSuitable(const Matrix& A, const Vector& B, con
         for (std::size_t x = 0; x < n; x++)
         {
             NewB[y] += A.At(y, x) * X[x];
+
+            itersCounter.AddNew();
         }
     }
 
     for (std::size_t y = 0; y < n; y++)
     {
+        itersCounter.AddNew();
+
         if (! isCloseToZeroForSolves(B[y] - NewB[y]))
         {
             return false;
@@ -44,75 +48,54 @@ bool GaussHoletskiySolver::isSolveSuitable(const Matrix& A, const Vector& B, con
     return true;
 }
 
-std::optional<LDLDecResult> GaussHoletskiySolver::ldlDecompose(const Matrix& A, IterationsCounter& itersCounter)
+std::optional<Matrix> GaussHoletskiySolver::llDecompose(const Matrix& A, IterationsCounter& itersCounter)
 {
     auto n = A.TryGetEdgeSize();
 
     Matrix L(n, n);
-    Matrix D(n, n);
-
-    for (std::size_t y = 0; y < n; y++)
-    {
-        for (std::size_t x = 0; x < n; x++)
-        {
-            L.At(y, x) = 0;
-            D.At(y, x) = 0;
-
-            itersCounter.AddNew();
-        }
-    }
 
     for (std::size_t j = 0; j < n; j++)
     {
-        L.At(j, j) = 1;
+        double sum = 0;
 
+        for (std::size_t k = 0; k < j; k++)
         {
-            double sum = 0;
-
-            for (std::size_t k = 0; k < j; k++)
-            {
-                sum += std::pow(L.At(j, k), 2) * D.At(k, k);
-
-                itersCounter.AddNew();
-            }
-
-            D.At(j, j) = A.At(j, j) - sum;
+            sum += std::pow(L.At(j, k), 2);
 
             itersCounter.AddNew();
         }
 
+        L.At(j, j) = std::sqrt(A.At(j, j) - sum);
+
         for (std::size_t i = j + 1; i < n; i++)
         {
-            auto diagElem = D.At(j, j);
-
-            if (isCloseToZero(diagElem))
-            {
-                return std::nullopt;
-            }
-
             double sum = 0;
 
             for (std::size_t k = 0; k < j; k++)
             {
-                sum += L.At(i, k) * D.At(k, k) * L.At(j, k);
+                sum += L.At(i, k) * L.At(j, k);
 
                 itersCounter.AddNew();
             }
 
-            L.At(i, j) = (A.At(i, j) - sum) / diagElem;
+            L.At(i, j) = (A.At(i, j) - sum) / L.At(j, j);
+        }
+    }
+
+    for (std::size_t y = 0; y < n; y++)
+    {
+        for (std::size_t x = y + 1; x < n; x++)
+        {
+            L.At(y, x) = 0;
 
             itersCounter.AddNew();
         }
     }
 
-    return LDLDecResult
-    {
-            .L = L
-        , .D = D
-    };
+    return L;
 }
 
-Vector GaussHoletskiySolver::solveY(const Matrix& L, const Vector& B, IterationsCounter& itersCounter)
+std::optional<Vector> GaussHoletskiySolver::solveY(const Matrix& L, const Vector& B, IterationsCounter& itersCounter)
 {
     auto n = B.Size();
 
@@ -129,42 +112,15 @@ Vector GaussHoletskiySolver::solveY(const Matrix& L, const Vector& B, Iterations
             itersCounter.AddNew();
         }
 
-        Y[i] = B[i] - sum;
-
-        itersCounter.AddNew();
+        Y[i] = (B[i] - sum) / L.At(i, i);
     }
 
     return Y;
 }
 
-std::optional<Vector> GaussHoletskiySolver::solveZ(const Matrix& D, const Vector& Y, IterationsCounter& itersCounter)
+std::optional<Vector> GaussHoletskiySolver::solveX(const Matrix& L, const Vector& Y, IterationsCounter& itersCounter)
 {
     auto n = Y.Size();
-
-    Vector Z(n);
-
-    for (std::size_t i = 0; i < n; i++)
-    {
-        auto diagElem = D.At(i, i);
-
-        if (isCloseToZero(diagElem))
-        {
-            return std::nullopt;
-
-            itersCounter.AddNew();
-        }
-
-        Z[i] = Y[i] / diagElem;
-
-        itersCounter.AddNew();
-    }
-
-    return Z;
-}
-
-Vector GaussHoletskiySolver::solveX(const Matrix& L, const Vector& Z, IterationsCounter& itersCounter)
-{
-    auto n = Z.Size();
 
     Vector X(n);
 
@@ -179,9 +135,7 @@ Vector GaussHoletskiySolver::solveX(const Matrix& L, const Vector& Z, Iterations
             itersCounter.AddNew();
         }
 
-        X[i] = Z[i] - sum;
-
-        itersCounter.AddNew();
+        X[i] = (Y[i] - sum) / L.At(i, i);
     }
 
     return X;
@@ -191,29 +145,35 @@ SolvingResult GaussHoletskiySolver::SolveInternally(Matrix&& A, Vector&& B)
 {
     IterationsCounter itersCounter{};
 
-    auto mayLDL = ldlDecompose(A, itersCounter);
+    auto mayL = llDecompose(A, itersCounter);
+    if (! mayL)
+    {
+        return SolvingResult::Error();
+    }
+    auto& L = mayL.value();
 
-    if (! mayLDL.has_value())
+    auto mayY = solveY(L, B, itersCounter);
+    if (! mayY)
+    {
+        return SolvingResult::Error();
+    }
+    auto& Y = mayY.value();
+
+    auto mayX = solveX(L, Y, itersCounter);
+    if (! mayX)
+    {
+        return SolvingResult::Error();
+    }
+    auto& X = mayX.value();
+
+    if (! isSolveSuitable(A, B, X, itersCounter))
     {
         return SolvingResult::Error();
     }
 
-    const auto& ldl = mayLDL.value();
-
-    auto Y = solveY(ldl.L, B, itersCounter);
-    auto mayZ = solveZ(ldl.D, Y, itersCounter);
-
-    if (! mayZ.has_value())
-    {
-        return SolvingResult::Error();
-    }
-
-    auto X = solveX(ldl.L, mayZ.value(), itersCounter);
-
-    if (! isSolveSuitable(A, B, X))
-    {
-        return SolvingResult::Error();
-    }
-
-    return SolvingResult::Successful(X).SetItersCountChainly(itersCounter.GetTotalCount());
+    return SolvingResult::Successful
+    (
+        std::move(X)
+    )
+    .SetItersCountChainly(itersCounter.GetTotalCount());
 }

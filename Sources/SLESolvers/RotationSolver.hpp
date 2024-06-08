@@ -10,7 +10,7 @@ public:
 private:
     SolvingResult SolveInternally(Matrix&& A, Vector&& B);
 
-    static std::size_t suitableDiagLine(const Matrix& A, std::size_t firstLine);
+    static std::size_t suitableDiagLine(const Matrix& A, std::size_t firstLine, IterationsCounter& itersCounter);
 
     static bool isCloseToZero(double x);
 };

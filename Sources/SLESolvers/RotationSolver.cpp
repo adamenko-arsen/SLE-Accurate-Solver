@@ -9,7 +9,7 @@ bool RotationSolver::isCloseToZero(double x)
     return std::fabs(x) < 1e-9;
 }
 
-std::size_t RotationSolver::suitableDiagLine(const Matrix& A, std::size_t firstLine)
+std::size_t RotationSolver::suitableDiagLine(const Matrix& A, std::size_t firstLine, IterationsCounter& itersCounter)
 {
     double maxValue = std::fabs(A.At(firstLine, firstLine));
     std::size_t maxIndex = firstLine;
@@ -23,6 +23,8 @@ std::size_t RotationSolver::suitableDiagLine(const Matrix& A, std::size_t firstL
             maxValue = mayNewMax;
             maxIndex = i;
         }
+
+        itersCounter.AddNew();
     }
 
     return maxIndex;
@@ -46,13 +48,11 @@ SolvingResult RotationSolver::SolveInternally(Matrix&& A, Vector&& B)
         }
 
         AB.At(y, n) = B[y];
-
-        itersCounter.AddNew();
     }
 
     for (std::size_t i = 0; i < n - 1; i++)
     {
-        auto maxDiagIndex = suitableDiagLine(AB, i);
+        auto maxDiagIndex = suitableDiagLine(AB, i, itersCounter);
 
         if (isCloseToZero(AB.At(maxDiagIndex, i)))
         {
@@ -62,6 +62,8 @@ SolvingResult RotationSolver::SolveInternally(Matrix&& A, Vector&& B)
         for (std::size_t r = 0; r < n + 1; r++)
         {
             std::swap(AB.At(i, r), AB.At(maxDiagIndex, r));
+
+            itersCounter.AddNew();
         }
 
         for (std::size_t j = i + 1; j < n; j++)
@@ -95,8 +97,6 @@ SolvingResult RotationSolver::SolveInternally(Matrix&& A, Vector&& B)
 
                 itersCounter.AddNew();
             }
-
-            itersCounter.AddNew();
         }
     }
 
@@ -104,6 +104,8 @@ SolvingResult RotationSolver::SolveInternally(Matrix&& A, Vector&& B)
 
     for (std::size_t i = 0; i < n; i++)
     {
+        itersCounter.AddNew();
+
         if (isCloseToZero(AB.At(i, i)))
         {
             return SolvingResult::Error();
@@ -122,8 +124,6 @@ SolvingResult RotationSolver::SolveInternally(Matrix&& A, Vector&& B)
         }
 
         X[i] = (AB.At(i, n) - membersSum) / AB.At(i, i);
-
-        itersCounter.AddNew();
     }
 
     return SolvingResult::Successful(std::move(X)).SetItersCountChainly(itersCounter.GetTotalCount());
