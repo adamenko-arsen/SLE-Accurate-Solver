@@ -496,7 +496,7 @@ void SLESolveShower::OutputSolve()
             {
                 varsValuesStr += "\n";
             }
-            varsValuesStr += std::format("X{}: {}", solveIndex + 1, solves[solveIndex]);
+            varsValuesStr += std::format("X{}: {:.9f}", solveIndex + 1, solves[solveIndex]);
         }
 
         doRenderGraph = false;

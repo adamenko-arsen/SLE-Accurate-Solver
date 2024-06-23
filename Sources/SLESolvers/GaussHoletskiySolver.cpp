@@ -12,9 +12,37 @@ bool GaussHoletskiySolver::isCloseToZeroForSolves(double x)
     return std::fabs(x) < 1e-12;
 }
 
-bool GaussHoletskiySolver::isCloseToZeroForAmbigiousCheck(double x)
+bool GaussHoletskiySolver::isSymmetrixMembersCloseEnough(double firstMember, double secondMember)
 {
-    return std::fabs(x) < 1e-12;
+    return std::fabs(firstMember - secondMember) < 1e-9;
+}
+
+bool GaussHoletskiySolver::isMatrixSymmetrix(const Matrix& maySymmetricMatrix, IterationsCounter& itersCounter)
+{
+    if (! maySymmetricMatrix.IsSquare())
+    {
+        return false;
+    }
+
+    auto n = maySymmetricMatrix.TryGetEdgeSize();
+
+    for (std::size_t y = 0; y < n; y++)
+    {
+        for (std::size_t x = 0; x < y; x++)
+        {
+            auto firstMember  = maySymmetricMatrix.At(y, x);
+            auto secondMember = maySymmetricMatrix.At(x, y);
+
+            if (! isSymmetrixMembersCloseEnough(firstMember, secondMember))
+            {
+                return false;
+            }
+
+            itersCounter.AddNew();
+        }
+    }
+
+    return true;
 }
 
 bool GaussHoletskiySolver::isSolveSuitable(const Matrix& A, const Vector& B, const Vector& X, IterationsCounter& itersCounter)
@@ -48,15 +76,15 @@ bool GaussHoletskiySolver::isSolveSuitable(const Matrix& A, const Vector& B, con
     return true;
 }
 
-std::optional<Matrix> GaussHoletskiySolver::llDecompose(const Matrix& A, IterationsCounter& itersCounter)
+std::optional<ComplexMatrix> GaussHoletskiySolver::llDecompose(const Matrix& A, IterationsCounter& itersCounter)
 {
     auto n = A.TryGetEdgeSize();
 
-    Matrix L(n, n);
+    ComplexMatrix L(n, n);
 
     for (std::size_t j = 0; j < n; j++)
     {
-        double sum = 0;
+        std::complex<double> sum = 0;
 
         for (std::size_t k = 0; k < j; k++)
         {
@@ -69,7 +97,7 @@ std::optional<Matrix> GaussHoletskiySolver::llDecompose(const Matrix& A, Iterati
 
         for (std::size_t i = j + 1; i < n; i++)
         {
-            double sum = 0;
+            std::complex<double> sum = 0;
 
             for (std::size_t k = 0; k < j; k++)
             {
@@ -95,15 +123,15 @@ std::optional<Matrix> GaussHoletskiySolver::llDecompose(const Matrix& A, Iterati
     return L;
 }
 
-std::optional<Vector> GaussHoletskiySolver::solveY(const Matrix& L, const Vector& B, IterationsCounter& itersCounter)
+std::optional<ComplexVector> GaussHoletskiySolver::solveY(const ComplexMatrix& L, const Vector& B, IterationsCounter& itersCounter)
 {
     auto n = B.Size();
 
-    Vector Y(n);
+    ComplexVector Y(n);
 
     for (std::size_t i = 0; i < n; i++)
     {
-        double sum = 0;
+        std::complex<double> sum = 0;
 
         for (std::size_t j = 0; j < i; j++)
         {
@@ -118,7 +146,7 @@ std::optional<Vector> GaussHoletskiySolver::solveY(const Matrix& L, const Vector
     return Y;
 }
 
-std::optional<Vector> GaussHoletskiySolver::solveX(const Matrix& L, const Vector& Y, IterationsCounter& itersCounter)
+std::optional<Vector> GaussHoletskiySolver::solveX(const ComplexMatrix& L, const ComplexVector& Y, IterationsCounter& itersCounter)
 {
     auto n = Y.Size();
 
@@ -126,7 +154,7 @@ std::optional<Vector> GaussHoletskiySolver::solveX(const Matrix& L, const Vector
 
     for (std::ptrdiff_t i = n - 1; i >= 0; i--)
     {
-        double sum = 0;
+        std::complex<double> sum = 0;
 
         for (std::size_t j = i + 1; j < n; j++)
         {
@@ -135,7 +163,7 @@ std::optional<Vector> GaussHoletskiySolver::solveX(const Matrix& L, const Vector
             itersCounter.AddNew();
         }
 
-        X[i] = (Y[i] - sum) / L.At(i, i);
+        X[i] = ((Y[i] - sum) / L.At(i, i)).real();
     }
 
     return X;
@@ -144,6 +172,11 @@ std::optional<Vector> GaussHoletskiySolver::solveX(const Matrix& L, const Vector
 SolvingResult GaussHoletskiySolver::SolveInternally(Matrix&& A, Vector&& B)
 {
     IterationsCounter itersCounter{};
+
+    if (! isMatrixSymmetrix(A, itersCounter))
+    {
+        return SolvingResult::Error();
+    }
 
     auto mayL = llDecompose(A, itersCounter);
     if (! mayL)

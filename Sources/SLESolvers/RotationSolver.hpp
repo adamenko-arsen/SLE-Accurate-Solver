@@ -8,9 +8,11 @@ public:
     ~RotationSolver() override = default;
 
 private:
+    static bool isCloseToZero(double x);
+    static bool isCloseToZeroForSolves(double x);
+
+    static bool isSolveSuitable(const Matrix& A, const Vector& B, const Vector& X, IterationsCounter& itersCounter);
+
     SolvingResult SolveInternally(Matrix&& A, Vector&& B);
 
-    static std::size_t suitableDiagLine(const Matrix& A, std::size_t firstLine, IterationsCounter& itersCounter);
-
-    static bool isCloseToZero(double x);
 };

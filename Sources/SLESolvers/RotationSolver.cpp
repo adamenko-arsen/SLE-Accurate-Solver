@@ -9,25 +9,40 @@ bool RotationSolver::isCloseToZero(double x)
     return std::fabs(x) < 1e-9;
 }
 
-std::size_t RotationSolver::suitableDiagLine(const Matrix& A, std::size_t firstLine, IterationsCounter& itersCounter)
+bool RotationSolver::isCloseToZeroForSolves(double x)
 {
-    double maxValue = std::fabs(A.At(firstLine, firstLine));
-    std::size_t maxIndex = firstLine;
+    return std::fabs(x) < 1e-12;
+}
 
-    for (std::size_t i = firstLine + 1; i < A.TryGetEdgeSize(); i++)
+bool RotationSolver::isSolveSuitable(const Matrix& A, const Vector& B, const Vector& X, IterationsCounter& itersCounter)
+{
+    auto n = B.Size();
+
+    Vector NewB(n);
+
+    for (std::size_t y = 0; y < n; y++)
     {
-        auto mayNewMax = std::fabs(A.At(i, firstLine));
+        NewB[y] = 0;
 
-        if (mayNewMax > maxValue)
+        for (std::size_t x = 0; x < n; x++)
         {
-            maxValue = mayNewMax;
-            maxIndex = i;
-        }
+            NewB[y] += A.At(y, x) * X[x];
 
-        itersCounter.AddNew();
+            itersCounter.AddNew();
+        }
     }
 
-    return maxIndex;
+    for (std::size_t y = 0; y < n; y++)
+    {
+        itersCounter.AddNew();
+
+        if (! isCloseToZeroForSolves(B[y] - NewB[y]))
+        {
+            return false;
+        }
+    }
+
+    return true;
 }
 
 SolvingResult RotationSolver::SolveInternally(Matrix&& A, Vector&& B)
@@ -52,26 +67,17 @@ SolvingResult RotationSolver::SolveInternally(Matrix&& A, Vector&& B)
 
     for (std::size_t i = 0; i < n - 1; i++)
     {
-        auto maxDiagIndex = suitableDiagLine(AB, i, itersCounter);
-
-        if (isCloseToZero(AB.At(maxDiagIndex, i)))
-        {
-            return SolvingResult::Error();
-        }
-
-        for (std::size_t r = 0; r < n + 1; r++)
-        {
-            std::swap(AB.At(i, r), AB.At(maxDiagIndex, r));
-
-            itersCounter.AddNew();
-        }
-
         for (std::size_t j = i + 1; j < n; j++)
         {
             auto b = AB.At(j, i);
             auto a = AB.At(i, i);
             
             auto squaresSum = a*a + b*b;
+
+            if (isCloseToZero(squaresSum))
+            {
+                continue;
+            }
 
             if (! (squaresSum > 0))
             {
