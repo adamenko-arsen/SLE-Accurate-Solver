@@ -6,12 +6,12 @@
 
 bool RotationSolver::isCloseToZero(double x)
 {
-    return std::fabs(x) < 1e-9;
+    return std::fabs(x) < 1e-12;
 }
 
 bool RotationSolver::isCloseToZeroForSolves(double x)
 {
-    return std::fabs(x) < 1e-12;
+    return std::fabs(x) < 1e-9;
 }
 
 bool RotationSolver::isSolveSuitable(const Matrix& A, const Vector& B, const Vector& X, IterationsCounter& itersCounter)
