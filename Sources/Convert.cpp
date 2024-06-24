@@ -2,6 +2,7 @@
 
 #include <sstream>
 #include <string>
+#include <iomanip>
 
 std::optional<std::ptrdiff_t> Convert::ToInteger(const std::string& mayFormattedInt)
 {
@@ -36,7 +37,22 @@ std::string Convert::NumberToString(double number)
     std::ostringstream streamForFormatting;
 
     streamForFormatting.imbue(std::locale::classic());
-    streamForFormatting << number;
+    streamForFormatting << std::fixed << std::setprecision(12) << number;
 
-    return streamForFormatting.str();
+    std::string formattedNumber = streamForFormatting.str();
+
+    formattedNumber.erase(formattedNumber.find_last_not_of('0') + 1, std::string::npos);
+
+    // Remove the decimal point if it is the last character
+    if (formattedNumber.back() == '.')
+    {
+        formattedNumber.pop_back();
+    }
+
+    if (formattedNumber.front() == '-')
+    {
+        formattedNumber.erase(0, 1);
+    }
+
+    return formattedNumber;
 }

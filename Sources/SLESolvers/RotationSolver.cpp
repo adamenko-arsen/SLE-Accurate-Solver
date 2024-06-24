@@ -129,6 +129,11 @@ SolvingResult RotationSolver::SolveInternally(Matrix&& A, Vector&& B)
             itersCounter.AddNew();
         }
 
+        if (isCloseToZero(AB.At(i, i)))
+        {
+            return SolvingResult::Error();
+        }
+
         X[i] = (AB.At(i, n) - membersSum) / AB.At(i, i);
     }
 

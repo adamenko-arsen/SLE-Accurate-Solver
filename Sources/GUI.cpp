@@ -496,7 +496,12 @@ void SLESolveShower::OutputSolve()
             {
                 varsValuesStr += "\n";
             }
-            varsValuesStr += std::format("X{}: {:.9f}", solveIndex + 1, solves[solveIndex]);
+            varsValuesStr += std::format
+            (
+                  "X{}: {}"
+                , solveIndex + 1
+                , Convert::NumberToString(solves[solveIndex])
+            );
         }
 
         doRenderGraph = false;
@@ -504,7 +509,12 @@ void SLESolveShower::OutputSolve()
     }
     else
     {
-        varsValuesStr = std::format("X (X1, червона):\t{}\nY (X2, синя):\t\t{}", solves[0], solves[1]);
+        varsValuesStr = std::format
+        (
+              "X (X1, червона):\t{}\nY (X2, синя):\t\t{}"
+            , Convert::NumberToString(solves[0])
+            , Convert::NumberToString(solves[1])
+        );
 
         doRenderGraph = true;
         outputGraph.queue_draw();

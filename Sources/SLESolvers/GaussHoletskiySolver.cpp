@@ -101,7 +101,7 @@ std::optional<ComplexMatrix> GaussHoletskiySolver::llDecompose(const Matrix& A, 
 
             for (std::size_t k = 0; k < j; k++)
             {
-                sum += L.At(i, k) * L.At(j, k);
+                sum += L.At(i, k) * std::conj(L.At(j, k));
 
                 itersCounter.AddNew();
             }
@@ -158,7 +158,7 @@ std::optional<Vector> GaussHoletskiySolver::solveX(const ComplexMatrix& L, const
 
         for (std::size_t j = i + 1; j < n; j++)
         {
-            sum += L.At(j, i) * X[j];
+            sum += std::conj(L.At(j, i)) * X[j];
 
             itersCounter.AddNew();
         }
